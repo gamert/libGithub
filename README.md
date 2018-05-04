@@ -1,8 +1,18 @@
 # libGithub
 
-#QuantConnect\Lean: 
-	C# vs2015编译ok
+#lean-monitor
+	1. mirthestam/lean-monitor
+	2. C# vs2015编译需要ref QuantConnect;
+	3. portfolio 证券投资组合
 
+#QuantConnect\Lean: 
+	C# vs2015编译ok	
+	1. portfolio 证券投资组合
+	2. GDAX Downloader SYMBOL RESOLUTION FROMDATE TODATE = ETH-USD Minute "20180101 00:00:00" "20180201 00:00:00"
+	3. 经纪商Tradier Brokerage联手QuantConnect推进算法交易
+	4. OANDA交易平台-全球信赖交易商
+	5. 零售外汇经纪商福汇(NASDAQ:FXCM)日前发布公告称,福汇美国与QuantConnect合作进行实时交易集成
+	6. 
 #askmike\Gekko	: 	
 	NodeJS,node + npm ,win7 ok
 #ctubio\Krypto-trading-bot:
@@ -21,3 +31,19 @@
 
 #StockSharp\StockSharp
 #woniu201\WnStock
+
+
+
+
+
+C:\Perl64\site\bin;C:\Perl64\bin;C:\ProgramData\Oracle\Java\javapath;C:\Python36\;C:\Python36\Scripts;%SystemRoot%\system32;
+
+%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\GtkSharp\2.12\bin;C:
+
+\Users\txz\AppData\Local\Android\Sdk\platform-tools;C:\Program Files\TortoiseSVN\bin;G:\Android\android-ndk-r12b;C:\Program Files
+
+\CMake\bin;C:\Program Files\dotnet\;C:\Program Files (x86)\Xoreax\IncrediBuild;C:\Go\bin;C:\Program Files\mingw-w64\x86_64-7.2.0-
+
+posix-seh-rt_v5-rev1\mingw64\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\nodejs\;C:\Program Files (x86)\Yarn\bin\;G:
+
+\ToolBase\SmartGit\Git\bin;C:\Anaconda3;C:\Anaconda3\Scripts;C:\Anaconda3\Library\bin
