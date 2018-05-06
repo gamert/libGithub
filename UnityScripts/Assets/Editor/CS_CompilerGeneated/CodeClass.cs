@@ -11,54 +11,21 @@ namespace Assets.Editor.CS_CompilerGeneated
     public class CodeClass_t : MemberBlockEx_t
     {
         protected CodeClass_t parent = null;  //存在父亲
-        protected string _title = "";
-        protected string type;    //默认的主type
 
         //儿子
         public List<MemberBlock_t> subs = new List<MemberBlock_t>();
 
-        public void AddLine(string line)
-        {
-            //在状态开始前，先判断
-            if (_stat == State_e.State_Null)
-            {
-                if (isClassDec(line))
-                {
-                    setTitle(line);
-                }
-                else
-                {
-
-                }
-
-            }
-
-            if (_stat == State_e.State_Begin)
-            {
-                if (isClassStart(line))
-                {
-
-                }
-                else if (isClassEnd(line))
-                {
-                    _stat = State_e.State_End;
-                }
-                else
-                {
-                    //处理成员
-                }
-            }
-        }
 
         CodeClass_t _sub = null;
         protected List<string> temp = new List<string>();
-        protected void handleMember(string line)
+        protected virtual void handleLine(string line)
         {
             if (_sub != null)
             {
-                _sub.handleMember(line);
+                _sub.handleLine(line);
                 if (_sub.IsEnd)
                 {
+                    subs.Add(_sub);
                     _sub = null;
                 }
                 return;
@@ -72,8 +39,14 @@ namespace Assets.Editor.CS_CompilerGeneated
             }
             else if (line.StartsWith("private sealed class "))
             {
-                //找到子类
+                //找到迭代子类
                 _sub = new CodeIteratorClass_t();
+                _sub.setTitle(line);
+            }
+            else if (line.StartsWith("public enum "))
+            {
+                //找到子类
+                _sub = new CodeEnumClass_t();
                 _sub.setTitle(line);
             }
             else
@@ -92,6 +65,42 @@ namespace Assets.Editor.CS_CompilerGeneated
             return true;
         }
 
+        void processIEnumerator()
+        {
+            for(int i = 0;i< subs.Count;++i)
+            {
+                if(subs[i].isIEnumerator())
+                {
+                    //找到
+                    string func = _FetchFuncName(subs[i]._title);
+                    CodeIteratorClass_t iter = _FindIteratorClass(func);
+                    iter.ReplaceTo(subs[i]);
+                }
+            }
+        }
+        string _FetchFuncName(string title)
+        {
+            return "";
+        }
+
+        CodeIteratorClass_t _FindIteratorClass(string func)
+        {
+            for (int i = 0; i < subs.Count; ++i)
+            {
+                if (subs[i].isCodeIteratorClass())
+                {
+                    return subs[i] as CodeIteratorClass_t;
+                }
+            }
+            return null;
+        }
+
+
+    }
+
+
+    public class CodeEnumClass_t : CodeClass_t
+    {
 
     }
 }
