@@ -25,6 +25,7 @@ namespace Assets.Editor.CS_CompilerGeneated
                 }
                 else if (lines[i].StartsWith("//"))
                 {
+                    _using.rows.Add(lines[i]);
                 }
                 else if (lines[i].StartsWith("/*"))
                 {
