@@ -8,7 +8,8 @@ namespace libEditor
         {
             CodeFile_t cf = new CodeFile_t();
 
-            string filepath = "G:/GitHub/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
+//            string filepath = "G:/GitHub/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
+            string filepath = "D:/Github/gamert/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
             cf.Load(filepath);
             cf.Handle();
             cf.Save(filepath+".cs");

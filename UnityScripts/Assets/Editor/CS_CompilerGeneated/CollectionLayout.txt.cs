@@ -1,6 +1,3 @@
-
-/*
-// Is alternative restored code with simple decompilation options:
 using Abrakam;
 using System;
 using System.Collections;
@@ -17,155 +14,6 @@ public class CollectionLayout : MonoBehaviour
         COLLECTION,
         DECK_EDITION,
         NONE
-    }
-
-    [CompilerGenerated]
-    private sealed class _003CTransitionToDeckEditionCoroutine_003Ec__Iterator0 : IEnumerator, IDisposable, IEnumerator<object>
-    {
-        internal CollectionSceneLayout _003ClocCollectionSceneLayout_003E__0;
-
-        internal Account _003ClocAccount_003E__0;
-
-        internal Deck parDeck;
-
-        internal CollectionLayout _0024this;
-
-        internal object _0024current;
-
-        internal bool _0024disposing;
-
-        internal int _0024PC;
-
-        object IEnumerator<object>.Current
-        {
-            [DebuggerHidden]
-            get
-            {
-                return this._0024current;
-            }
-        }
-
-        object IEnumerator.Current
-        {
-            [DebuggerHidden]
-            get
-            {
-                return this._0024current;
-            }
-        }
-
-        [DebuggerHidden]
-        public _003CTransitionToDeckEditionCoroutine_003Ec__Iterator0()
-        {
-        }
-
-        public bool MoveNext()
-        {
-            uint num = (uint)this._0024PC;
-            this._0024PC = -1;
-            switch (num)
-            {
-                case 0u:
-                    this._003ClocCollectionSceneLayout_003E__0 = (ApplicationManager.faeriaSceneManager.GetSceneLayout(FaeriaSceneManager.SceneType.COLLECTION) as CollectionSceneLayout);
-                    this._003ClocAccount_003E__0 = ApplicationManager.dataManager.GetYouAccount();
-                    this._003ClocAccount_003E__0.currentGameMode = GameMode.COLLECTION;
-                    this._0024this.editedDeck = this.parDeck;
-                    this._0024this.UpdateMode(CollectionMode.DECK_EDITION);
-                    this._0024current = null;
-                    if (!this._0024disposing)
-                    {
-                        this._0024PC = 1;
-                    }
-                    return true;
-                case 1u:
-                    this._0024PC = -1;
-                    break;
-            }
-            return false;
-        }
-
-        [DebuggerHidden]
-        public void Dispose()
-        {
-            this._0024disposing = true;
-            this._0024PC = -1;
-        }
-
-        [DebuggerHidden]
-        public void Reset()
-        {
-            throw new NotSupportedException();
-        }
-    }
-
-    [CompilerGenerated]
-    private sealed class _003CForceDeckTutorialCoroutine_003Ec__Iterator1 : IEnumerator, IDisposable, IEnumerator<object>
-    {
-        internal CollectionLayout _0024this;
-
-        internal object _0024current;
-
-        internal bool _0024disposing;
-
-        internal int _0024PC;
-
-        object IEnumerator<object>.Current
-        {
-            [DebuggerHidden]
-            get
-            {
-                return this._0024current;
-            }
-        }
-
-        object IEnumerator.Current
-        {
-            [DebuggerHidden]
-            get
-            {
-                return this._0024current;
-            }
-        }
-
-        [DebuggerHidden]
-        public _003CForceDeckTutorialCoroutine_003Ec__Iterator1()
-        {
-        }
-
-        public bool MoveNext()
-        {
-            uint num = (uint)this._0024PC;
-            this._0024PC = -1;
-            switch (num)
-            {
-                case 0u:
-                    ApplicationManager.gameStateManager.HandleMessage(MessageType.GO_TO_COLLECTION);
-                    this._0024current = SceneLayout.WaitUntilInitialised(FaeriaSceneManager.SceneType.COLLECTION);
-                    if (!this._0024disposing)
-                    {
-                        this._0024PC = 1;
-                    }
-                    return true;
-                case 1u:
-                    this._0024this.OnCreateDeck();
-                    this._0024PC = -1;
-                    break;
-            }
-            return false;
-        }
-
-        [DebuggerHidden]
-        public void Dispose()
-        {
-            this._0024disposing = true;
-            this._0024PC = -1;
-        }
-
-        [DebuggerHidden]
-        public void Reset()
-        {
-            throw new NotSupportedException();
-        }
     }
 
     [Header("Buttons")]
@@ -597,18 +445,22 @@ public class CollectionLayout : MonoBehaviour
     [DebuggerHidden]
     private IEnumerator TransitionToDeckEditionCoroutine(Deck parDeck)
     {
-        _003CTransitionToDeckEditionCoroutine_003Ec__Iterator0 _003CTransitionToDeckEditionCoroutine_003Ec__Iterator = new _003CTransitionToDeckEditionCoroutine_003Ec__Iterator0();
-        _003CTransitionToDeckEditionCoroutine_003Ec__Iterator.parDeck = parDeck;
-        _003CTransitionToDeckEditionCoroutine_003Ec__Iterator._0024this = this;
-        return _003CTransitionToDeckEditionCoroutine_003Ec__Iterator;
+        CollectionSceneLayout _003ClocCollectionSceneLayout_003E__0;
+        Account _003ClocAccount_003E__0;
+        _003ClocCollectionSceneLayout_003E__0 = (ApplicationManager.faeriaSceneManager.GetSceneLayout(FaeriaSceneManager.SceneType.COLLECTION) as CollectionSceneLayout);
+        _003ClocAccount_003E__0 = ApplicationManager.dataManager.GetYouAccount();
+        _003ClocAccount_003E__0.currentGameMode = GameMode.COLLECTION;
+        editedDeck = parDeck;
+        UpdateMode(CollectionMode.DECK_EDITION);
+        yield return null;
     }
 
     [DebuggerHidden]
     public IEnumerator ForceDeckTutorialCoroutine()
     {
-        _003CForceDeckTutorialCoroutine_003Ec__Iterator1 _003CForceDeckTutorialCoroutine_003Ec__Iterator = new _003CForceDeckTutorialCoroutine_003Ec__Iterator1();
-        _003CForceDeckTutorialCoroutine_003Ec__Iterator._0024this = this;
-        return _003CForceDeckTutorialCoroutine_003Ec__Iterator;
+        ApplicationManager.gameStateManager.HandleMessage(MessageType.GO_TO_COLLECTION);
+        yield return SceneLayout.WaitUntilInitialised(FaeriaSceneManager.SceneType.COLLECTION);
+        OnCreateDeck();
     }
 
     public void ToggleCrafting()
@@ -676,6 +528,3 @@ public class CollectionLayout : MonoBehaviour
         this.cardCollectionPanel.ResetScrollbar();
     }
 }
-
-*/
-

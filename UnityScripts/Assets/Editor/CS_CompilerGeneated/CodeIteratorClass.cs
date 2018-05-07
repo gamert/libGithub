@@ -13,33 +13,75 @@ namespace Assets.Editor.CS_CompilerGeneated
         int substate = 0;
         public override void handleLine(string line)
         {
-            if(substate == 0)
+            if (line.StartsWith(SPACE4))
+                line = line.Substring(4);
+
+            //if(substate == 0)
             {
-                AutoTruncate_StartsWith(ref line, "        this._0024this.", "        ");
+                AutoTruncate_StartsWith(ref line, SPACE4 + "this._0024this.", SPACE4);
                 line = line.Replace("this.", "");
-                if(line.Contains("_0024current = null;"))
-                {
-                    substate = 1;
-                }
-                else if (line.Contains("if (!this._0024disposing)"))
-                {
-                    substate = 1;
-                }
-                else
+                //if(line.Contains("_0024current = null;"))
+                //{
+                //    substate = 1;
+                //}
+                //else if (line.Contains("if (!this._0024disposing)"))
+                //{
+                //    substate = 1;
+                //}
+                //else
                 {
                     //AutoTruncate_StartsWith(ref line, "this.", "");
                     this.rows.Add(line);
                 }
             }
-            if (line.StartsWith("        return true;"))
+            if (line.StartsWith(SPACE4 + "return true;"))
                 setEnd();// _stat = State_e.State_End;
-            else if (line.StartsWith("        break;"))
+            else if (line.StartsWith(SPACE4 + "break;"))
                 setEnd();//_stat = State_e.State_End;
+            if(this.IsEnd)
+            {
+                postAdd();
+            }
         }
 
-        public void post()
+        public void postAdd()
         {
-
+            bool handled = false;
+            for(int i = 0;i < this.rows.Count;++i)
+            {
+                if (rows[i].StartsWith(SPACE4+"_0024current = "))
+                {
+                    if(rows[i + 1] == SPACE4 + "if (!_0024disposing)")
+                    {
+                        string s = rows[i].Replace(SPACE4 + "_0024current = ", "");
+                        handled = true;
+                        AddYield(i, s);
+                        break;
+                    }
+                }
+                else if (rows[i] == SPACE4 + "_0024PC = -1;")
+                {
+                    if(rows[i + 1] == SPACE4 + "break;")
+                    {
+                        handled = true; 
+                        AddYield(i,null);
+                        break;
+                    }
+                }
+            }
+            if(!handled)
+            {
+                Log("not handled!!!");
+            }
+        }
+        void AddYield(int i,string s)
+        {
+            if(s!=null)
+            {
+                rows[i] = SPACE4 + "yield return " + s;
+                i++;
+            }
+            rows.RemoveRange(i, rows.Count - i);
         }
     }
 
@@ -229,7 +271,8 @@ namespace Assets.Editor.CS_CompilerGeneated
             dst.AddRow("{");
             for (int i = 0;i< _tmember.Count;++i)
             {
-                dst.AddRow(_tmember[i]);
+                if (_tmember[i].Contains("_003Cloc"))
+                    dst.AddRow("    "+_tmember[i]);
             }
             //MoveNext
             for(int i = 0;i< MoveNext.subs.Count;++i)

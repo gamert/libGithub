@@ -9,6 +9,8 @@ namespace Assets.Editor.CS_CompilerGeneated
     //一个代码块
     public class Block_t
     {
+        public static string SPACE4 = "    ";
+
         //普通的表达式
         public List<string> rows = new List<string>();
     }
