@@ -70,22 +70,26 @@ namespace Assets.Editor.CS_CompilerGeneated
         {
             _stat = State_e.State_End;
         }
-        protected bool isClassStart(string line)
+        protected int isClassStart(string line)
         {
             bool b = _stat == State_e.State_Null && line.StartsWith("{");
             if(b && rows.Count > 1)
             {
                 string t = rows[rows.Count - 2];
                 if (t.Contains(" enum "))
-                    return true;
+                    return 1;
                 if (t.Contains(" class "))
-                    return true;
+                    return 1;
                 if (t.Contains(" struct "))
-                    return true;
+                    return 1;
                 if (t.Contains(" IEnumerator"))
-                    return true;
+                    return 1;
                 if (t.Contains("_003Ec__Iterator"))
-                    return true;
+                    return 1;
+                if (t.Contains("namespace "))
+                    return 1;
+                if (t.StartsWith("    : base("))
+                    return 2;
 
                 //是否是函数的开始？
                 if (t.StartsWith("public ")|| t.StartsWith("private ") || t.StartsWith("protected "))
@@ -97,12 +101,13 @@ namespace Assets.Editor.CS_CompilerGeneated
                         string dec = m.Groups[1].ToString();
                         string ret = m.Groups[2].ToString();
                         string func = m.Groups[3].ToString();
-                        return !string.IsNullOrEmpty(ret) && !string.IsNullOrEmpty(func);
+                        if( !string.IsNullOrEmpty(ret) && !string.IsNullOrEmpty(func));
+                            return 1;
                     }
-                    return false;
+                    return 0;
                 }
             }
-            return false;
+            return 0;
         }
         protected bool isClassEnd(string line)
         {
@@ -121,9 +126,13 @@ namespace Assets.Editor.CS_CompilerGeneated
                 return;
             }
             this.rows.Add(line);
-            if (isClassStart(line))
+            int st = isClassStart(line);
+            if(st>0)
             {
-                _title = rows[rows.Count-2];    //
+                if(st == 2)
+                    _title = rows[rows.Count-3] + "\n"+ rows[rows.Count - 2];    //
+                else
+                    _title = rows[rows.Count - 2];
                 //从前一行中，处理声明?
                 _stat = State_e.State_Begin;
             }
@@ -205,7 +214,12 @@ namespace Assets.Editor.CS_CompilerGeneated
 
         public bool isIEnumerator()
         {
-            return _title.StartsWith("public IEnumerator ") || _title.StartsWith("private IEnumerator ") || _title.StartsWith("protected IEnumerator ");
+            if(_title.Contains(" IEnumerator "))
+            {
+                string func = _FetchIEnumeratorFuncName(_title);
+                return !string.IsNullOrEmpty(func);// _title.StartsWith("public IEnumerator ") || _title.StartsWith("private IEnumerator ") || _title.StartsWith("protected IEnumerator ");
+            }
+            return false;
         }
 
         //([a-zA-Z0-9]+)\, type\: ([0 - 9]+)\}
@@ -231,10 +245,10 @@ namespace Assets.Editor.CS_CompilerGeneated
         }
 
 
-        static Regex rgx_IEnumeratorFuncName = new Regex(@"([public|private|protected]) IEnumerator ([a-zA-Z0-9]+)\(");
+        static Regex rgx_IEnumeratorFuncName = new Regex(@"([public|private|protected])([ | override ])IEnumerator ([a-zA-Z0-9]+)\(");
         public static string _FetchIEnumeratorFuncName(string title)
         {
-            return Regex_FetchMatch(rgx_IEnumeratorFuncName, title,2);
+            return Regex_FetchMatch(rgx_IEnumeratorFuncName, title,3);
         }
     }
 

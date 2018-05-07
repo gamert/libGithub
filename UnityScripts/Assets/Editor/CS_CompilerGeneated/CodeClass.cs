@@ -44,6 +44,12 @@ namespace Assets.Editor.CS_CompilerGeneated
                 _sub = new CodeEnumClass_t(_deep + 1);
                 _sub.AddLine(line);
             }
+            else if (line.StartsWith("public class "))
+            {
+                //找到子类
+                _sub = new CodeClass_t(_deep + 1);
+                _sub.AddLine(line);
+            }
             else //if (line.Contains("private FaeriaButtonDock craftModeButton;"))
             {
                 _sub = new MemberBlock_t(_deep + 1);
@@ -52,6 +58,9 @@ namespace Assets.Editor.CS_CompilerGeneated
                 //LogError("识别的行:"+ line);
             }
         }
+
+
+
         void _testEndSub()
         {
             if (_sub.IsEnd)
@@ -67,6 +76,13 @@ namespace Assets.Editor.CS_CompilerGeneated
         {
             for (int i = 0; i < subs.Count; ++i)
             {
+                CodeClass_t cc = subs[i] as CodeClass_t;
+                if(cc!=null)
+                {
+                    cc.Handle();
+                    continue;
+                }
+
                 if (subs[i].isIEnumerator())
                 {
                     //找到

@@ -18,7 +18,8 @@ namespace Assets.Editor.CS_CompilerGeneated
 
             //if(substate == 0)
             {
-                AutoTruncate_StartsWith(ref line, SPACE4 + "this._0024this.", SPACE4);
+                //AutoTruncate_StartsWith(ref line, SPACE4 + "this._0024this.", SPACE4);
+                line = line.Replace("_0024this.", "");
                 line = line.Replace("this.", "");
                 //if(line.Contains("_0024current = null;"))
                 //{
@@ -195,6 +196,11 @@ namespace Assets.Editor.CS_CompilerGeneated
                         _0024this = line;
                         substate = 1;
                     }
+                    else if (line.Contains(" _0024current;"))
+                    {
+                        _0024current = line;
+                        substate = 2;
+                    }
                     else 
                     {
                         //要先处理下成员...
@@ -204,7 +210,7 @@ namespace Assets.Editor.CS_CompilerGeneated
                     break;
                 case 1:
                     _0024current = line;
-                    substate ++;
+                    substate =2;
                     break;
                 case 2:
                     _0024disposing = line;

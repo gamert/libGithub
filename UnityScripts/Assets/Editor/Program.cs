@@ -7,11 +7,12 @@ namespace libEditor
     {
         static void Main(string[] args)
         {
-            string filepath = "D:/Github/gamert/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
+            //string filepath = "D:/Github/gamert/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
             //            string filepath = "G:/GitHub/libGithub/UnityScripts/Assets/Editor/CS_CompilerGeneated/CollectionLayout.txt";
-            handleOneFile(filepath);
+            string filepath = "G:/Dev/Faeria/proj.unity/Assets/Scripts/WorldMapState.cs";
+            //handleOneFile(filepath);
 
-
+            handlePath("G:/Dev/Faeria/proj.unity/Assets/Scripts");
         }
 
         static void handlePath(string path)
