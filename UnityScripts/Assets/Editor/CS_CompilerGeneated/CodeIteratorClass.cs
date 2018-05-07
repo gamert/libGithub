@@ -1,17 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Assets.Editor.CS_CompilerGeneated
 {
+    //处理case:
+    public class CaseBlock_t : MemberBlock_t
+    {
+        int substate = 0;
+        public override void handleLine(string line)
+        {
+            if(substate == 0)
+            {
+                AutoTruncate_StartsWith(ref line, "        this._0024this.", "        ");
+                line = line.Replace("this.", "");
+                if(line.Contains("_0024current = null;"))
+                {
+                    substate = 1;
+                }
+                else if (line.Contains("if (!this._0024disposing)"))
+                {
+                    substate = 1;
+                }
+                else
+                {
+                    //AutoTruncate_StartsWith(ref line, "this.", "");
+                    this.rows.Add(line);
+                }
+            }
+            if (line.StartsWith("        return true;"))
+                setEnd();// _stat = State_e.State_End;
+            else if (line.StartsWith("        break;"))
+                setEnd();//_stat = State_e.State_End;
+        }
+
+        public void post()
+        {
+
+        }
+    }
+
+    //yield return :
     public class MoveNextBlock_t : MemberBlock_t
     {
         int substate = 0;
 
-        public List<MemberBlock_t> subs = new List<MemberBlock_t>();
+        public List<CaseBlock_t> subs = new List<CaseBlock_t>();
 
-        MemberBlock_t _sub;
+        CaseBlock_t _sub;
         public override void handleLine(string line)
         {
             if (line == "")
@@ -38,10 +73,26 @@ namespace Assets.Editor.CS_CompilerGeneated
             }
             else if (substate == 1)
             {
-                if (line.StartsWith("switch (num)"))
+                if (line.StartsWith("    case "))
+                {
+                    _sub = new CaseBlock_t();
+                    //_sub._title = (line);
+                }
+                else if (line == ("}"))
                 {
                     substate++;
                 }
+            }
+            else if (substate == 2)
+            {
+                if (line == ("return false;"))
+                {
+                    substate++;
+                }
+            }
+            else if (substate == 3)
+            {
+
             }
         }
     }
@@ -62,7 +113,7 @@ namespace Assets.Editor.CS_CompilerGeneated
         MemberBlock_t Current2 = new MemberBlock_t();
         MemberBlock_t Iterator0 = new MemberBlock_t();
 
-        MemberBlock_t MoveNext = new MemberBlock_t();
+        MoveNextBlock_t MoveNext = new MoveNextBlock_t();
         MemberBlock_t Dispose = new MemberBlock_t();
         MemberBlock_t Reset = new MemberBlock_t();
 
@@ -78,12 +129,8 @@ namespace Assets.Editor.CS_CompilerGeneated
 
         //
         int substate = 0;
-        void handleLine(string line)
+        public override void handleLine(string line)
         {
-            if (line == "")
-            {
-                return;
-            }
             switch (substate)
             {
                 case 0:
@@ -94,6 +141,8 @@ namespace Assets.Editor.CS_CompilerGeneated
                     }
                     else 
                     {
+                        //要先处理下成员...
+                        AutoTruncate_StartsWith(ref line, "internal ");
                         _tmember.Add(line);
                     }
                     break;
@@ -124,10 +173,10 @@ namespace Assets.Editor.CS_CompilerGeneated
                     }
                     break;
                 case 6:
-                    Iterator0.rows.Add(line);
+                    Iterator0.AddLine(line);
                     if (Iterator0.IsEnd)
                     {
-                        substate++;
+                         substate++;
                     }
                     break;
                 case 7:
@@ -138,7 +187,7 @@ namespace Assets.Editor.CS_CompilerGeneated
                     }
                     break;
                 case 8:
-                    Dispose.rows.Add(line);
+                    Dispose.AddLine(line);
                     if (Dispose.IsEnd)
                     {
                         substate++;
@@ -150,6 +199,9 @@ namespace Assets.Editor.CS_CompilerGeneated
                     {
                         substate++;
                     }
+                    break;
+                case 10:
+                    this.setEnd();
                     break;
             }
         }
@@ -166,9 +218,21 @@ namespace Assets.Editor.CS_CompilerGeneated
                 dst.AddRow(_tmember[i]);
             }
             //MoveNext
-
-
+            for(int i = 0;i< MoveNext.subs.Count;++i)
+            {
+                CaseBlock_t cb = MoveNext.subs[i];
+                for (int j = 0; j < cb.rows.Count; ++j)
+                    dst.AddRow(cb.rows[j]);
+            }
             dst.AddRow("}");
+        }
+
+        public void Handle(CaseBlock_t cb)
+        {
+        }
+
+        public override void Save(StringBuilder sb)
+        {
         }
     }
 

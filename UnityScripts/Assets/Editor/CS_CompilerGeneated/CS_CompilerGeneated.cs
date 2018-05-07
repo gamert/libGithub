@@ -1,5 +1,6 @@
-﻿using Assets.Editor.CS_CompilerGeneated;
+﻿
 using System.IO;
+using System.Text;
 //using System.Threading.Tasks;
 
 namespace Assets.Editor.CS_CompilerGeneated
@@ -11,14 +12,22 @@ namespace Assets.Editor.CS_CompilerGeneated
 
         public CodeClass_t _main = new CodeClass_t();
 
+        string _filepath;
         public void Load(string filepath)
         {
+            _filepath = filepath;
+
             string[] lines = File.ReadAllLines(filepath);
             for(int i = 0;i<lines.Length;++i)
             {
-                if(lines[i].StartsWith("//"))
+                if(lines[i] == (""))
                 {
-
+                }
+                else if (lines[i].StartsWith("//"))
+                {
+                }
+                else if (lines[i].StartsWith("/*"))
+                {
                 }
                 else if (lines[i].StartsWith("using "))
                 {
@@ -33,6 +42,19 @@ namespace Assets.Editor.CS_CompilerGeneated
                     break;
                 }
             }
+        }
+        public void Handle()
+        {
+            _main.Handle();
+        }
+
+        public void Save(string filepath)
+        {
+            StringBuilder sb = new StringBuilder();
+            _main.Save(sb);
+
+            File.WriteAllText(filepath, sb.ToString());
+
         }
     }
 }

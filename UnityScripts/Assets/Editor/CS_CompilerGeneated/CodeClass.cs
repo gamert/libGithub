@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace Assets.Editor.CS_CompilerGeneated
@@ -16,13 +14,13 @@ namespace Assets.Editor.CS_CompilerGeneated
         public List<MemberBlock_t> subs = new List<MemberBlock_t>();
 
 
-        CodeClass_t _sub = null;
+        MemberBlock_t _sub = null;
         protected List<string> temp = new List<string>();
-        protected virtual void handleLine(string line)
+        public override void handleLine(string line)
         {
             if (_sub != null)
             {
-                _sub.handleLine(line);
+                _sub.AddLine(line);
                 if (_sub.IsEnd)
                 {
                     subs.Add(_sub);
@@ -30,8 +28,6 @@ namespace Assets.Editor.CS_CompilerGeneated
                 }
                 return;
             }
-
-            line = line.Substring(4 * (1 + _deep));   //先去掉
             if (line.StartsWith("["))
             {
                 //是注释
@@ -41,22 +37,70 @@ namespace Assets.Editor.CS_CompilerGeneated
             {
                 //找到迭代子类
                 _sub = new CodeIteratorClass_t();
-                _sub.setTitle(line);
+                _sub.AddLine(line);
             }
             else if (line.StartsWith("public enum "))
             {
                 //找到子类
                 _sub = new CodeEnumClass_t();
-                _sub.setTitle(line);
+                _sub.AddLine(line);
             }
-            else
+            else //if (line.Contains("private FaeriaButtonDock craftModeButton;"))
             {
-
+                _sub = new MemberBlock_t();
+                _sub.AddLine(line);
+                if (_sub.IsEnd)
+                {
+                    subs.Add(_sub);
+                    _sub = null;
+                }
+                //LogError("识别的行:"+ line);
             }
+        }
+
+        public override void Handle()
+        {
+            for (int i = 0; i < subs.Count; ++i)
+            {
+                if (subs[i].isIEnumerator())
+                {
+                    //找到
+                    string func = _FetchIEnumeratorFuncName(subs[i]._title);
+                    if(func!=null)
+                    {
+                        CodeIteratorClass_t iter = _FindIteratorClass(func);
+                        if (iter != null)
+                        {
+                            iter.ReplaceTo(subs[i]);
+                        }
+                        else
+                        {
+                            LogError("没有找到对应的CodeIteratorClass_t: " + func);
+                        }
+                    }
+                    else
+                    {
+                        LogError("没有找到 _FetchIEnumeratorFuncName: " + subs[i]._title);
+                    }
+                }
+            }
+        }
+        //
+        public override void Save(StringBuilder sb)
+        {
+            sb.AppendLine(this._title);
+            sb.AppendLine("{");
+            for (int i = 0; i < subs.Count; ++i)
+            {
+                subs[i].Save(sb);
+            }
+            sb.AppendLine("}");
         }
 
         protected void setTitle(string line)
         {
+            if(rows.Count == 0)
+                rows.Add(line);
             _title = line;
             _stat = State_e.State_Begin;
         }
@@ -65,29 +109,13 @@ namespace Assets.Editor.CS_CompilerGeneated
             return true;
         }
 
-        void processIEnumerator()
-        {
-            for(int i = 0;i< subs.Count;++i)
-            {
-                if(subs[i].isIEnumerator())
-                {
-                    //找到
-                    string func = _FetchFuncName(subs[i]._title);
-                    CodeIteratorClass_t iter = _FindIteratorClass(func);
-                    iter.ReplaceTo(subs[i]);
-                }
-            }
-        }
-        string _FetchFuncName(string title)
-        {
-            return "";
-        }
 
+        //根据名字
         CodeIteratorClass_t _FindIteratorClass(string func)
         {
             for (int i = 0; i < subs.Count; ++i)
             {
-                if (subs[i].isCodeIteratorClass())
+                if (subs[i].isCodeIteratorClass(func))
                 {
                     return subs[i] as CodeIteratorClass_t;
                 }
