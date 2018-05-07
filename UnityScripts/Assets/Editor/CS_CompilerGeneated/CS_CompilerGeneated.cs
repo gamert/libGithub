@@ -10,7 +10,7 @@ namespace Assets.Editor.CS_CompilerGeneated
     {
         public Block_t _using = new Block_t();
 
-        public CodeClass_t _main = new CodeClass_t();
+        public CodeClass_t _main = new CodeClass_t(0);
 
         string _filepath;
         public void Load(string filepath)
@@ -51,6 +51,11 @@ namespace Assets.Editor.CS_CompilerGeneated
         public void Save(string filepath)
         {
             StringBuilder sb = new StringBuilder();
+            for(int i =0;i < _using.rows.Count;++i)
+            {
+                sb.AppendLine(_using.rows[i]);
+            }
+            sb.AppendLine("");
             _main.Save(sb);
 
             File.WriteAllText(filepath, sb.ToString());

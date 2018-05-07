@@ -27,12 +27,19 @@ namespace Assets.Editor.CS_CompilerGeneated
         public string _title = "";
         public string type;    //默认的主type
 
+        public MemberBlock_t(int deep)
+        {
+            setDeep(deep);
+        }
+
+        public List<string> attrs = new List<string>(); //保存属性
         //普通的表达式
         protected int _deep = 0;   //表示深度
         protected string sdeep = "";
         public void setDeep(int deep)
         {
             _deep = deep;
+            sdeep = "";
             for (int i = 0; i < _deep; ++i)
             {
                 sdeep = sdeep + "    ";
@@ -63,7 +70,7 @@ namespace Assets.Editor.CS_CompilerGeneated
         }
         protected bool isClassStart(string line)
         {
-            bool b = _stat == State_e.State_Null && line.StartsWith(sdeep + "{");
+            bool b = _stat == State_e.State_Null && line.StartsWith("{");
             if(b && rows.Count > 1)
             {
                 string t = rows[rows.Count - 2];
@@ -97,7 +104,7 @@ namespace Assets.Editor.CS_CompilerGeneated
         }
         protected bool isClassEnd(string line)
         {
-            return _stat == State_e.State_Begin && line.StartsWith(sdeep + "}");
+            return _stat == State_e.State_Begin && line.StartsWith("}");
         }
 
         static Regex rgx_func_dec = new Regex(@"([public|private|protected]) ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)\(");
@@ -170,9 +177,13 @@ namespace Assets.Editor.CS_CompilerGeneated
         public virtual void Save(StringBuilder sb)
         {
             sb.AppendLine("");
+            for (int i = 0; i < attrs.Count; ++i)
+            {
+                sb.AppendLine(sdeep + attrs[i]);
+            }
             for (int i=0;i<rows.Count;++i)
             {
-                sb.AppendLine(rows[i]);
+                sb.AppendLine(sdeep+rows[i]);
             }
         }
 
@@ -218,10 +229,10 @@ namespace Assets.Editor.CS_CompilerGeneated
         }
 
 
-        static Regex rgx_IEnumeratorFuncName = new Regex(@"public IEnumerator ([a-zA-Z0-9]+)\(");
+        static Regex rgx_IEnumeratorFuncName = new Regex(@"([public|private|protected]) IEnumerator ([a-zA-Z0-9]+)\(");
         public static string _FetchIEnumeratorFuncName(string title)
         {
-            return Regex_FetchMatch(rgx_IEnumeratorFuncName, title,1);
+            return Regex_FetchMatch(rgx_IEnumeratorFuncName, title,2);
         }
     }
 
@@ -229,6 +240,10 @@ namespace Assets.Editor.CS_CompilerGeneated
     public class MemberBlockEx_t : MemberBlock_t
     {
         //复杂的表达式
+        public MemberBlockEx_t(int deep)
+            :base(deep)
+        {
+        }
 
     }
 }

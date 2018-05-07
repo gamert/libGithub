@@ -6,6 +6,10 @@ namespace Assets.Editor.CS_CompilerGeneated
     //处理case:
     public class CaseBlock_t : MemberBlock_t
     {
+        public CaseBlock_t(int deep)
+            : base(deep)
+        {
+        }
         int substate = 0;
         public override void handleLine(string line)
         {
@@ -42,6 +46,10 @@ namespace Assets.Editor.CS_CompilerGeneated
     //yield return :
     public class MoveNextBlock_t : MemberBlock_t
     {
+        public MoveNextBlock_t(int deep)
+            : base(deep)
+        {
+        }
         int substate = 0;
 
         public List<CaseBlock_t> subs = new List<CaseBlock_t>();
@@ -75,7 +83,7 @@ namespace Assets.Editor.CS_CompilerGeneated
             {
                 if (line.StartsWith("    case "))
                 {
-                    _sub = new CaseBlock_t();
+                    _sub = new CaseBlock_t(_deep + 1);
                     //_sub._title = (line);
                 }
                 else if (line == ("}"))
@@ -100,6 +108,12 @@ namespace Assets.Editor.CS_CompilerGeneated
     //迭代器子类
     public class CodeIteratorClass_t : CodeClass_t
     {
+        public CodeIteratorClass_t(int deep)
+            : base(deep)
+        {
+            Init();
+        }
+
         List<string> _tmember = new List<string>(); //临时成员
 
         //
@@ -109,13 +123,13 @@ namespace Assets.Editor.CS_CompilerGeneated
         string _0024disposing;//internal bool _0024disposing;
         string _0024PC;//internal int _0024PC;
 
-        MemberBlock_t Current1 = new MemberBlock_t();
-        MemberBlock_t Current2 = new MemberBlock_t();
-        MemberBlock_t Iterator0 = new MemberBlock_t();
+        MemberBlock_t Current1 = new MemberBlock_t(0);
+        MemberBlock_t Current2 = new MemberBlock_t(0);
+        MemberBlock_t Iterator0 = new MemberBlock_t(0);
 
-        MoveNextBlock_t MoveNext = new MoveNextBlock_t();
-        MemberBlock_t Dispose = new MemberBlock_t();
-        MemberBlock_t Reset = new MemberBlock_t();
+        MoveNextBlock_t MoveNext = new MoveNextBlock_t(0);
+        MemberBlock_t Dispose = new MemberBlock_t(0);
+        MemberBlock_t Reset = new MemberBlock_t(0);
 
         public void Init()
         {

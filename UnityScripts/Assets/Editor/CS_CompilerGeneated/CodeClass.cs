@@ -13,7 +13,10 @@ namespace Assets.Editor.CS_CompilerGeneated
         //儿子
         public List<MemberBlock_t> subs = new List<MemberBlock_t>();
 
-
+        public CodeClass_t(int deep)
+            : base(deep)
+        {
+        }
         MemberBlock_t _sub = null;
         protected List<string> temp = new List<string>();
         public override void handleLine(string line)
@@ -21,11 +24,7 @@ namespace Assets.Editor.CS_CompilerGeneated
             if (_sub != null)
             {
                 _sub.AddLine(line);
-                if (_sub.IsEnd)
-                {
-                    subs.Add(_sub);
-                    _sub = null;
-                }
+                _testEndSub();
                 return;
             }
             if (line.StartsWith("["))
@@ -36,25 +35,31 @@ namespace Assets.Editor.CS_CompilerGeneated
             else if (line.StartsWith("private sealed class "))
             {
                 //找到迭代子类
-                _sub = new CodeIteratorClass_t();
+                _sub = new CodeIteratorClass_t(_deep + 1);
                 _sub.AddLine(line);
             }
             else if (line.StartsWith("public enum "))
             {
                 //找到子类
-                _sub = new CodeEnumClass_t();
+                _sub = new CodeEnumClass_t(_deep + 1);
                 _sub.AddLine(line);
             }
             else //if (line.Contains("private FaeriaButtonDock craftModeButton;"))
             {
-                _sub = new MemberBlock_t();
+                _sub = new MemberBlock_t(_deep + 1);
                 _sub.AddLine(line);
-                if (_sub.IsEnd)
-                {
-                    subs.Add(_sub);
-                    _sub = null;
-                }
+                _testEndSub();
                 //LogError("识别的行:"+ line);
+            }
+        }
+        void _testEndSub()
+        {
+            if (_sub.IsEnd)
+            {
+                _sub.attrs.AddRange(temp);
+                subs.Add(_sub);
+                _sub = null;
+                temp.Clear();
             }
         }
 
@@ -129,6 +134,20 @@ namespace Assets.Editor.CS_CompilerGeneated
 
     public class CodeEnumClass_t : CodeClass_t
     {
-
+        public CodeEnumClass_t(int deep)
+            : base(deep)
+        {
+        }
+        //
+        public override void handleLine(string line)
+        {
+        }
+        public override void Save(StringBuilder sb)
+        {
+            for (int i = 0; i < rows.Count; ++i)
+            {
+                sb.AppendLine(sdeep + rows[i]);
+            }
+        }
     }
 }
