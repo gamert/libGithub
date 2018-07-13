@@ -171,6 +171,8 @@ namespace cn.crashByNull
         }
     }
 
+
+
     public static class FileIDUtil
     {
         public static int Compute(Type t)
