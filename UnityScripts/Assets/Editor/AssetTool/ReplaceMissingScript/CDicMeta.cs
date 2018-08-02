@@ -52,7 +52,7 @@ namespace Tool.RMS
 
     class CDicMeta
     {
-        Dictionary<string, Meta_t> dic = new Dictionary<string, Meta_t>();
+        public Dictionary<string, Meta_t> dic = new Dictionary<string, Meta_t>();
 
         public int Count
         {
@@ -101,7 +101,9 @@ namespace Tool.RMS
             string[] ss = Directory.GetFiles(proj_path, filt, SearchOption.AllDirectories);
             for (int i = 0; i < ss.Length; ++i)
             {
-                HandleFileMetaToDic(bAllMeta ? ss[i] : (ss[i] + ".meta"), dicMetas);
+                //统一处理成unix文件名
+                string fn = ss[i].Replace('\\','/');
+                HandleFileMetaToDic(bAllMeta ? fn : (fn + ".meta"), dicMetas);
             }
             Debug.Log(string.Format("****创建Meta字典****： {0}处理完毕，count={1}", proj_path, dicMetas.Count));
         }
