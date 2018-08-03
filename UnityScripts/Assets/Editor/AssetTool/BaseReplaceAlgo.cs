@@ -16,6 +16,18 @@ namespace AssetTool
         protected string _progress_prefix = "ReplaceMissScriptInFile...";
         protected bool _shouldStop = false;
 
+
+        //Unity Editor: <path tp project folder>/Assets
+        static public string GetAssetPath(string pathname)
+        {
+            string dataPath = Application.dataPath.Replace('\\', '/');
+            if (pathname.StartsWith(dataPath))
+            {
+                pathname = "Assets" + pathname.Replace(dataPath, "");
+            }
+            return pathname;
+        }
+
         protected void ReplaceProjectMissScriptInFile(string proj_path, string filte)
         {
             replacerow = 0;
@@ -24,7 +36,7 @@ namespace AssetTool
             {
                 float progress = (float)i / ss.Length;
 
-                EditorUtility.DisplayProgressBar(_progress_prefix, ss[i], progress);
+                EditorUtility.DisplayProgressBar(_progress_prefix + filte, ss[i], progress);
                 ReplaceMissScriptInFile(ss[i]);
             }
         }

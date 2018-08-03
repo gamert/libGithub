@@ -100,36 +100,42 @@ namespace AssetTool
             //
             ReplaceProjectMissScriptInFile(proj_path, "*.mat"); //*.asset;*.mat;
 
-            //ReplaceProjectMissScriptInFile(proj_path, "*.asset");
-            //if (replacerow > 0)
-            //{
-            //    Debug.Log("asset 替换 =" + replacerow);
-            //}
-            //ReplaceProjectMissScriptInFile(proj_path, "*.prefab");
-            //if (replacerow > 0)
-            //{
-            //    Debug.Log("prefab 替换 =" + replacerow);
-            //}
-            //ReplaceProjectMissScriptInFile(proj_path, "*.unity");
-            //if (replacerow > 0)
-            //{
-            //    Debug.Log("unity 替换 =" + replacerow);
-            //}
+            ReplaceProjectMissScriptInFile(proj_path, "*.asset");
+            if (replacerow > 0)
+            {
+                Debug.Log("asset 替换 =" + replacerow);
+            }
+            ReplaceProjectMissScriptInFile(proj_path, "*.prefab");
+            if (replacerow > 0)
+            {
+                Debug.Log("prefab 替换 =" + replacerow);
+            }
+            ReplaceProjectMissScriptInFile(proj_path, "*.unity");
+            if (replacerow > 0)
+            {
+                Debug.Log("unity 替换 =" + replacerow);
+            }
 
             //删除其他的引用...
-            //foreach (var e in fenlei)
-            //{
-            //    SameNameShadersList sns = e.Value;
-            //    for (int i = sns.ls.Count - 1; i >= 0; --i)
-            //    {
-            //        Meta_t src = sns.ls[i];
-            //        //删除这个shader..
-            //        if (AssetDatabase.DeleteAsset(src.fn) == false)
-            //            Debug.LogError("DeleteAsset fail:" + src.fn);
-            //    }
-            //}
+            foreach (var e in fenlei)
+            {
+                SameNameShadersList sns = e.Value;
+                for (int i = sns.ls.Count - 1; i >= 0; --i)
+                {
+                    Meta_t src = sns.ls[i];
+                    //删除这个shader..
+                    //string an = GetAssetPath(src.fn);
+                    File.Delete(src.fn);
+                    if(File.Exists(src.fn))
+                    {
+                        Debug.LogError("DeleteAsset fail:" + src.fn);
+                        return;
+                    }
+                }
+            }
             fenlei.Clear();
         }
+
 
 
         string dstUUID = "";
@@ -166,13 +172,14 @@ namespace AssetTool
                             //
                             string fileID = m.Groups[1].ToString();
                             string fileType = m.Groups[2].ToString();
-                            //根据fileID找到
 
+                            int pos = sLine.IndexOf(":");
+                            string pad = sLine.Substring(0, pos);
                             //Debug.Log(string.Format("[{0}]找到Ref={1},{2},{3}", lineNo, t, v.fn, sLine));
-                            sNewLine = string.Format(@"  m_Shader: {{fileID: {0}, guid: {1}, type: {2}}}", fileID, dstUUID, fileType);
+                            sNewLine = string.Format(@"{0}: {{fileID: {1}, guid: {2}, type: {3}}}", pad, fileID, dstUUID, fileType);
                             replacerow++;
 
-                            _shouldStop = true;
+                            //_shouldStop = true;
                             return 1;
                         }
                         else
