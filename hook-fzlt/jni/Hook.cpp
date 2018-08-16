@@ -124,9 +124,9 @@ int new_game_proxy(char *data, size_t data_len, int a3, void *a4, char a5, char*
 	int retValue = 0;
 	LOGD("Hook: new_game_proxy %s==================",name);
 	
-	struct _MonoImage* result;  
+	struct _MonoImage* result;
 	retValue = old_game_proxy(data,data_len,a3,a4,a5,name);
-
+	result = (_MonoImage*)retValue;
 	if (strstr(name,"Assembly-CSharp.dll"))
 	{
 		char *pDll = "/data/local/tmp/Assembly-CSharp.dll";
@@ -174,7 +174,7 @@ bool hook_game_proxy()
 			LOGE("Hook:find mono_func failed!\n");
 			break;
 		}
-		mono_func += 0x196C4C; //mono_image_open_from_data_with_name在libmono.so中的偏移
+		mono_func = (char*)mono_func + 0x192F08; //mono_image_open_from_data_with_name在libmono.so中的偏移
 
 		//hook之前打印函数头8个字节
 		LOGI("=============original code====================");
@@ -193,4 +193,4 @@ bool hook_game_proxy()
 
 	LOGD("Hook:=====hook_game_proxy finish=====");
 	return state;
-} 
+}
