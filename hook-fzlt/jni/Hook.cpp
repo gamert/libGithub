@@ -118,7 +118,7 @@ void inlineHook_game_proxy(void* currentFunc, void* targetFunc)
 	LOGI("=======inlineHook_game_proxy finished========");
 }
 
-
+//Hook: new_game_proxy /data/app/com.kingnet.gundam.mg.normal-1/base.apk/assets/bin/Data/Managed/Assembly-CSharp-firstpass.dll
 int new_game_proxy(char *data, size_t data_len, int a3, void *a4, char a5, char* name)
 {
 	int retValue = 0;
@@ -127,20 +127,42 @@ int new_game_proxy(char *data, size_t data_len, int a3, void *a4, char a5, char*
 	struct _MonoImage* result;
 	retValue = old_game_proxy(data,data_len,a3,a4,a5,name);
 	result = (_MonoImage*)retValue;
-	if (strstr(name,"Assembly-CSharp.dll"))
+
+	if (strstr(name,"/Assembly-CSharp.dll")
+			|| strstr(name,"/Assembly-CSharp-firstpass.dll")
+			|| strstr(name,"/BulletEngine.dll")
+			)
 	{
-		char *pDll = "/data/local/tmp/Assembly-CSharp.dll";
+		LOGD("Hook: _MonoImage %s==================",name);
+
+		const char *pName = strrchr(name,'/');
+		pName++;
+
+		char pDll[1024];
+		sprintf(pDll,"/data/local/tmp/%s",pName);
+
+		//char *pDll = "/data/local/tmp/Assembly-CSharp.dll";
 		if (access(pDll, 0) == -1)
 		{
 			//Assembly-CSharp.dll不存在则dump
-			FILE *file = fopen(pDll, "wb+");
+			FILE *file = fopen(pDll, "wb");
+//			if(file == NULL)
+//			{
+//				LOGD("===============fopen(%s) fail",pDll);
+//				pDll = "/data/Assembly-CSharp.dll";
+//				file = fopen(pDll, "wb+");
+//			}
 			if (file != NULL) {
 				fwrite (result->raw_data , 1, result->raw_data_len, file );
 				fclose(file);
 				LOGI("dump file %s successfully!!");
 			}
-
-		}else{
+			else
+			{
+				LOGD("===============fopen(%s) fail",pDll);
+			}
+		}
+		else{
 			//存在则加载，并替换原来的dll
 			FILE *fpDll;  
 			fpDll = fopen(pDll, "r");  
@@ -155,7 +177,11 @@ int new_game_proxy(char *data, size_t data_len, int a3, void *a4, char a5, char*
 				result->raw_data = mono_data;
 				result->raw_data_len = len;
 				LOGD("===============replace Assembly-CSharp.dll==================");
-			}  
+			}
+			else
+			{
+				LOGD("===============fopen(%s) fail",pDll);
+			}
 		}
 	}
 	return retValue;	
