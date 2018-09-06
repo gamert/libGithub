@@ -5,7 +5,7 @@ using System.Reflection;
 using cn.crashByNull;
 using UnityEngine;
 
-namespace Tool.RMS
+namespace AssetTool.RMS
 {
 
     //保存所有的meta信息

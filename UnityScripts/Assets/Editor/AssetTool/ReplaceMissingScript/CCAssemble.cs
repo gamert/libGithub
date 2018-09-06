@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using cn.crashByNull;
 
-namespace Tool.RMS
+namespace AssetTool.RMS
 {
     //绑定类型，直接计算
     //外部： fileID的值永远是11500000，它实际上指的是MonoScript类型组件，它的值由ClassID * 10000
@@ -24,6 +24,80 @@ namespace Tool.RMS
         public string ClassIDString
         {
             get { return (ClassID * 100000).ToString(); }
+        }
+
+        public void Dump(StreamWriter sw,bool bWithMember)
+        {
+            sw.WriteLine(type.ToString() + "=" + fileID);//
+            if (!bWithMember)
+            {
+                return;
+            }
+
+            //sw.WriteLine("\nThe members of class '{0}' are :\n", type);
+
+            //返回为当前 Type 的所有公共成员。
+            //成员包括属性、 方法、 字段、 事件和等等。
+            BindingFlags bindingAttr = BindingFlags.DeclaredOnly 
+                | BindingFlags.Public 
+                | BindingFlags.NonPublic 
+                | BindingFlags.Instance 
+                | BindingFlags.Static
+                ;
+            MemberInfo[] mi = type.GetMembers(bindingAttr);
+            for (int i = 0; i < mi.Length; ++i)
+            {
+                if(mi[i].MemberType == MemberTypes.Constructor)
+                {
+                    if(mi[i].Name == ".ctor")
+                    {
+                        continue;
+                    }
+                }
+
+                sw.WriteLine("\t{0};{1}", mi[i].MemberType, mi[i].ToString());
+                //if(mi[i].MemberType == MemberTypes.Method)
+                //{
+                //    MethodInfo tt = mi[i] as MethodInfo;
+                //    sw.WriteLine("\t{0};{1};{2}", tt.MemberType, tt.ReturnParameter, tt.Name);
+                //}
+                //else if (mi[i].MemberType == MemberTypes.Field)
+                //{
+                //    FieldInfo tt = mi[i] as FieldInfo;
+                //    sw.WriteLine("\t{0};{1};{2}", tt.MemberType, tt.FieldType, tt.Name);
+                //}
+                //else if (mi[i].MemberType == MemberTypes.Field)
+                //{
+                //    EventInfo tt = mi[i] as EventInfo;
+                //    sw.WriteLine("\t{0};{1};{2}", tt.MemberType, tt.EventHandlerType, tt.Name);
+                //}
+                /*mi[i].MemberType =
+        Constructor = 1,
+        Event = 2,
+        Field = 4,
+        Method = 8,
+        Property = 16,
+        TypeInfo = 32,
+        Custom = 64,
+        NestedType = 128,
+                */
+                //sw.WriteLine(mi[i].ToString());
+            }
+
+            //sw.WriteLine("\nThe GetFields of class '{0}' are :\n", type);
+            //FieldInfo[] fi = type.GetFields(bindingAttr);
+            //for(int i = 0;i < fi.Length;++i)
+            //{
+            //    sw.WriteLine(fi[i].ToString());
+            //}
+
+            //sw.WriteLine("\nThe GetEvents of class '{0}' are :\n", type);
+            //EventInfo[] ei = type.GetEvents(bindingAttr);
+            //for (int i = 0; i < ei.Length; ++i)
+            //{
+            //    sw.WriteLine(ei[i].ToString());
+            //}
+
         }
     }
 
@@ -79,7 +153,7 @@ namespace Tool.RMS
         }
 
         //
-        public void Dump()
+        public void Dump(bool bWithMember = false)
         {
             //int pos = m_meta.fn.LastIndexOf('/');
             //string fn;
@@ -90,14 +164,15 @@ namespace Tool.RMS
             StreamWriter sw = new StreamWriter(fp);
             foreach (CCTypeMeta_t t in typeDic.Values)
             {
-                sw.WriteLine(t.type.ToString() + "=" + t.fileID);
+                t.Dump(sw, bWithMember);
+                //sw.WriteLine();//t.type.ToString() + "=" + t.fileID
             }
             sw.Close();
             fp.Close();
         }
 
         //读取本Domain 中DLL中的所有类型
-        public void LoadDomainDllTypes(string dllName)
+        public Assembly LoadDomainDllTypes(string dllName)
         {
             Clear();
 
@@ -112,12 +187,15 @@ namespace Tool.RMS
                     if (name == dllName)
                     {
                         candi = assembly;
+                        
                         break;
                     }
                 }
             }
             if (candi != null)
             {
+                mName = dllName;
+
                 //candi.FullName
                 // "G:\Aotu\worksapce100\Client2\UIBase, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null.meta".
                 Type[] types = candi.GetTypes();
@@ -125,6 +203,7 @@ namespace Tool.RMS
                 //Dump();
                 OnLoad();
             }
+            return candi;
         }
 
         void Clear()

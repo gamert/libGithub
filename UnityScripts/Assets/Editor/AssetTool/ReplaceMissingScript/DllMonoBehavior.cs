@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Tool.RMS
+namespace AssetTool.RMS
 {
 
     //管理Dll中的Mono

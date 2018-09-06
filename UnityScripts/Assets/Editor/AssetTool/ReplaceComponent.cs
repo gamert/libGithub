@@ -5,6 +5,7 @@ namespace AssetTool
 {
 public class ReplaceComponent
 {
+#if UNITY_4
     private static void Repalce()
     {
         UnityEngine.GameObject[] selections = Selection.gameObjects;
@@ -20,7 +21,7 @@ public class ReplaceComponent
         AssetDatabase.SaveAssets();
     }
 
-    static void SetObjRecursively(GameObject rootObj,Material mat)
+        static void SetObjRecursively(GameObject rootObj,Material mat)
     {
         if (null != rootObj.renderer)
         {
@@ -46,10 +47,11 @@ public class ReplaceComponent
         }
     }
 
-    //[MenuItem("EctypeEditor/Replace Component")]
-    static void ReplaceComponentSelect()
+        //[MenuItem("EctypeEditor/Replace Component")]
+        static void ReplaceComponentSelect()
     {
         Repalce();
     }
-}
+#endif
+    }
 }

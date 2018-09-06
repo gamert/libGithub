@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-namespace Tool.RMS
+namespace AssetTool.RMS
 {
     //DLL 替换普通:支持从xGame和Assembly-CSharp中替换:
     public class DLLReplaceNormal

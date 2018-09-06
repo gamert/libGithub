@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-namespace Tool.RMS
+namespace AssetTool.RMS
 {
     public class YAMLClassID
     {
