@@ -281,12 +281,14 @@ namespace AssetTool.RMS
             int realpercent = percent * 10;
             if (CompareNSResult.Count > 0 && CompareNSResult[0].percent > realpercent )
             {
-                sw.WriteLine(TypeWithNS + ":");
+                sw.WriteLine(TypeWithNS + " 相似数:"+ CompareNSResult.Count);
                 for (int i = 0; i < CompareNSResult.Count; ++i)
                 {
                     if(CompareNSResult[i].percent> realpercent)
                     {
                         sw.WriteLine(string.Format("\t[{0}%,{1},{2}] ", CompareNSResult[i].percent*0.1f, CompareNSResult[i].refType.TypeName, CompareNSResult[i].refType.TypeWithNS));
+                        //这里使用算法递减结果，以保证最多输出最大的5个..
+                        realpercent += 10;
                     }
                 }
             }

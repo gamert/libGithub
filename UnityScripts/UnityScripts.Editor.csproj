@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Full v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Editor:5</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.3p4</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -126,11 +124,11 @@
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CCAssemble.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CCLevenshtein.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CDicMeta.cs" />
-    <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\DLLReplaceNormal.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CSharpMember_t.cs" />
-    <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\DllMonoBehavior.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CSharpType_t.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\CSharpTypesWithMember.cs" />
+    <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\DLLReplaceNormal.cs" />
+    <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\DllMonoBehavior.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\FileIDUtil.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\LimitLengthList.cs" />
     <Compile Include="Assets\Editor\AssetTool\ReplaceMissingScript\NewBehaviourScript.cs" />
@@ -149,12 +147,12 @@
     <None Include="Assets\Editor\AssetTool\ReplaceMissingScript\ClassID.txt" />
     <None Include="Assets\Editor\AssetTool\readme.txt" />
     <None Include="Assets\Editor\CS_CompilerGeneated\CollectionLayout.txt" />
-    <None Include="Assets\StreamingAssets\CompareNSResult30.txt" />
     <None Include="Assets\StreamingAssets\CompareResult.txt" />
     <None Include="Assets\StreamingAssets\Percent100.txt" />
     <None Include="Assets\StreamingAssets\Percent_Left.txt" />
     <None Include="Assets\StreamingAssets\ReliefCSharp\Type_Assembly-CSharp-firstpass.txt" />
     <None Include="Assets\StreamingAssets\ReliefCSharp\Type_Assembly-CSharp.txt" />
+    <None Include="Assets\StreamingAssets\TypeNamePercent50.txt" />
     <None Include="Assets\StreamingAssets\marsdigtal.txt" />
     <None Include="Assets\StreamingAssets\pub_class.txt" />
     <None Include="Assets\StreamingAssets\safe_class.txt" />
