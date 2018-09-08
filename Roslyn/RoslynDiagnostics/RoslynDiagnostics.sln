@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynDiagnostics", "src\RoslynDiagnostics\RoslynDiagnostics.csproj", "{7079B49F-8EF0-4429-8165-F8A0D60677EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynDiagnostics.Logic", "src\RoslynDiagnostics.Logic\RoslynDiagnostics.Logic.csproj", "{1FB0C1E2-255D-49BA-A867-869044991D17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssignAll", "src\roslyn-analyzers\AssignAll\AssignAll\AssignAll.csproj", "{0D09FF78-4E40-4B3A-A8A5-228248C57B0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssignAll.Vsix", "src\roslyn-analyzers\AssignAll\AssignAll.Vsix\AssignAll.Vsix.csproj", "{B176E12E-F1EB-4776-9D13-3F4E9064E08D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssignAll.Test", "src\roslyn-analyzers\AssignAll\AssignAll.Test\AssignAll.Test.csproj", "{A688797A-94FA-428C-9815-DCC927C1293A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClrHeapAllocationAnalyzer", "..\RoslynClrHeapAllocationAnalyzer\ClrHeapAllocationsAnalyzer\ClrHeapAllocationAnalyzer.csproj", "{1D9AC639-1A83-46CB-9641-73BF36B5465C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7079B49F-8EF0-4429-8165-F8A0D60677EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7079B49F-8EF0-4429-8165-F8A0D60677EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7079B49F-8EF0-4429-8165-F8A0D60677EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7079B49F-8EF0-4429-8165-F8A0D60677EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FB0C1E2-255D-49BA-A867-869044991D17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FB0C1E2-255D-49BA-A867-869044991D17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FB0C1E2-255D-49BA-A867-869044991D17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FB0C1E2-255D-49BA-A867-869044991D17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D09FF78-4E40-4B3A-A8A5-228248C57B0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D09FF78-4E40-4B3A-A8A5-228248C57B0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D09FF78-4E40-4B3A-A8A5-228248C57B0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D09FF78-4E40-4B3A-A8A5-228248C57B0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B176E12E-F1EB-4776-9D13-3F4E9064E08D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B176E12E-F1EB-4776-9D13-3F4E9064E08D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B176E12E-F1EB-4776-9D13-3F4E9064E08D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B176E12E-F1EB-4776-9D13-3F4E9064E08D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A688797A-94FA-428C-9815-DCC927C1293A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A688797A-94FA-428C-9815-DCC927C1293A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A688797A-94FA-428C-9815-DCC927C1293A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A688797A-94FA-428C-9815-DCC927C1293A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D9AC639-1A83-46CB-9641-73BF36B5465C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D9AC639-1A83-46CB-9641-73BF36B5465C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D9AC639-1A83-46CB-9641-73BF36B5465C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D9AC639-1A83-46CB-9641-73BF36B5465C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71BBA13E-3CE9-47C1-A40E-71BEF0B10E57}
+	EndGlobalSection
+EndGlobal

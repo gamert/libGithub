@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="RoslynDiagnostics..b3e4d5bc-fff7-4ef0-811f-a8cf347eb6ee">
+    <Name>RoslynDiagnostics</Name>
+    <Author>Marcin Juraszek</Author>
+    <Version>0.2</Version>
+    <Description xml:space="preserve">Roslyn based C# Diagnostics and CodeFixes Visual Studio Extension.</Description>
+    <Locale>1033</Locale>
+    <SupportedProducts>
+      <VisualStudio Version="12.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.5" MaxVersion="4.5" />
+  </Identifier>
+  <References>
+    <!--Add References here-->
+  </References>
+
+  <Content>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+  </Content>
+
+</Vsix>
