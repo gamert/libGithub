@@ -13,7 +13,7 @@ public class MonoTool
 {
     static Regex rgx_11500000 = new Regex(@"m_Script\: \{fileID\: 11500000\, guid\: ([a-zA-Z0-9]+)\, type\: ([0-9]+)\}");
 
-    [MenuItem("tool/Test_ReplaceMissScript1")]
+    //[MenuItem("tool/Test_ReplaceMissScript1")]
     static void Test_ReplaceMissScript1()
     {
         m_UIBaseDLL.LoadDomainDllTypes("UIBase");
@@ -37,7 +37,7 @@ public class MonoTool
     //3. 对每个dst中的prefab进行测试，找到所有丢失的fileid，然后在B中找到，并通过B确认Type和路径；
     //4. 将丢失的fileid，更换为新的uuid， md4(DLL+type)
     //https://blog.csdn.net/gz_huangzl/article/details/52486509
-    [MenuItem("tool/ReplaceMissScript")]
+    //[MenuItem("tool/ReplaceMissScript")]
     public static void ReplaceMissScript()
     {
         if (!m_UIBaseDLL.IsOk())

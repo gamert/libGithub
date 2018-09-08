@@ -49,7 +49,7 @@ namespace AssetTool.RMS
             {
                 if(mi[i].MemberType == MemberTypes.Constructor)
                 {
-                    if(mi[i].Name == ".ctor")
+                    if(mi[i].Name == ".ctor" || mi[i].Name == ".cctor")
                     {
                         continue;
                     }

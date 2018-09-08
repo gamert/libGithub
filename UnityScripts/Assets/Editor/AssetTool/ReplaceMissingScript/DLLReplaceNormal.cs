@@ -23,7 +23,7 @@ namespace AssetTool.RMS
         //3. 对每个dst中的prefab进行测试，找到所有丢失的fileid，然后在B中找到，并通过B确认Type和路径；
         //4. 将丢失的fileid，更换为新的uuid， md4(DLL+type)
         //https://blog.csdn.net/gz_huangzl/article/details/52486509
-        [MenuItem("tool/ReplaceMissScript")]
+        //[MenuItem("tool/ReplaceMissScript")]
         public static void ReplaceMissScript()
         {
             DLLReplaceNormal dr = new DLLReplaceNormal();

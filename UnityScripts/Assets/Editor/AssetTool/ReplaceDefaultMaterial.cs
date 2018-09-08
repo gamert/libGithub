@@ -11,7 +11,7 @@ namespace AssetTool
     /// </summary>
     class ReplaceDefaultMaterial : BaseReplaceAlgo
     {
-        [MenuItem("tool/AssetTool/Replace Mat")]
+        //[MenuItem("tool/AssetTool/Replace Mat")]
         static void ReplaceComponentSelect()
         {
             //查找所有的mat中，是否有引用默认
