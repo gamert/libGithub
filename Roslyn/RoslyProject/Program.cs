@@ -21,16 +21,16 @@ namespace Walterlv.Demo.Roslyn
         private static async Task RunAsync()
         {//G:\GitHub\dotnet\otnet-campus\MSTestEnhancer\MSTest.Extensions.sln
             Solution solution = await MSBuildWorkspace.Create().OpenSolutionAsync(
-                @"G:\Aotu\worksapce100\DClient2\Trunk\Trunk.sln");
-            Project project = solution.Projects.First(x => x.Name == "Trunk");
-            //var document = project.Documents.First(x =>
-            //    x.Name.Equals("ContractTestContext.cs", StringComparison.InvariantCultureIgnoreCase));
+                @"G:\GitHub\libGitHub\Roslyn\Samples\ConsoleApp1\ConsoleApp1.sln");
+            Project project = solution.Projects.First(x => x.Name == "ConsoleApp1");
             if(!project.HasDocuments)
             {
                 return;
             }
-            IEnumerable<Document> itr = project.Documents;
-            Document document = itr.First(x =>true);
+            var document = project.Documents.First(x =>
+                x.Name.Equals("DataDefine.cs", StringComparison.InvariantCultureIgnoreCase));
+            //IEnumerable<Document> itr = project.Documents;
+            //Document document = itr.First(x =>true);
 
             SyntaxTree tree = await document.GetSyntaxTreeAsync();
             CompilationUnitSyntax syntax = tree.GetCompilationUnitRoot();
