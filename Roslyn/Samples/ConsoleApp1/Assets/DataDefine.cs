@@ -1,25 +1,33 @@
 namespace MobaGo.FlatBuffer
 {
+    public class tseT
+    {
+        public int abcd;
+        public string user;
+    }
+
     //zTODO: 代码改为Script生成器：
     public enum kScriptSpellProc : ushort
     {
-        SSP_7 = 7,  //
+        SSP_7 = 7, //
         SSP_Max = 89,
-    };
+    }
 
+    ;
     //
     public enum kSoldierExOrdi : ushort
     {
         Reserve = 0,
-        Zhanshi = 1,  //近战
+        Zhanshi = 1, //近战
         Yuancheng = 2,
         Paobing = 3,
         Chaojibing = 4,
         Xiaolong = 7,
         Dalong = 8,
         Xunluobing = 10,
-    };
+    }
 
+    ;
     //z技能范围指示类型:
     public enum kSpellIndicatorOrdi : ushort
     {
@@ -28,8 +36,9 @@ namespace MobaGo.FlatBuffer
         Pos = 2,
         Orient = 3,
         Track = 4,
-    };
+    }
 
+    ;
     //
     public enum kSpellPickOrdi : ushort
     {
@@ -38,19 +47,20 @@ namespace MobaGo.FlatBuffer
         Self = 2,
         Orient = 3,
         BlLessTeammate = 4,
-
         TelePortTarget = 5,
         LowerHpEnermyButDargon = 6,
-    };
+    }
 
+    ;
     //
     public enum kSpellCastOrdi : ushort
     {
         All = 0,
         Enermy = 1,
         We = 2,
-    };
+    }
 
+    ;
     //Clear
     public enum kScriptSpellClearOrdi : ushort
     {
@@ -61,8 +71,9 @@ namespace MobaGo.FlatBuffer
         Hurt2 = 5,
         HurtOrUseSkill = 6,
         DamageDeadOrUSeSkill = 7,
-    };
+    }
 
+    ;
     //Add:
     public enum kScriptSpellAddOrdi : ushort
     {
@@ -72,9 +83,9 @@ namespace MobaGo.FlatBuffer
         Keep = 4,
         Reset = 5,
         Force = 6,
-    };
+    }
 
-
+    ;
     //数值类型
     public enum kNumberOrdi : ushort
     {
@@ -82,8 +93,9 @@ namespace MobaGo.FlatBuffer
         Ratio = 1,
         Random = 2,
         Seq = 3
-    };
+    }
 
+    ;
     //
     public enum kCPCondOrdi : ushort
     {
@@ -105,8 +117,9 @@ namespace MobaGo.FlatBuffer
         C16 = 16,
         C17 = 17,
         C18 = 18,
-    };
+    }
 
+    ;
     public enum kCPTriggleOrdi : ushort
     {
         T1 = 1,
@@ -117,20 +130,23 @@ namespace MobaGo.FlatBuffer
         T6 = 6,
         T7 = 7,
         T8 = 8,
-    };
+    }
 
+    ;
     //扩展类型:
     public enum kMonsterExOrdi : ushort
     {
         Jungle = 2, //野怪
-    };
+    }
 
+    ;
     //
     public enum kOverlayFadeOrdi : ushort
     {
         Precent = 0,
         Mult = 1,
         Scale = 2,
-    };
+    }
 
+    ;
 }
