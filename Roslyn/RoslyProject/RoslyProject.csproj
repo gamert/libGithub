@@ -204,8 +204,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DumpSolutionTypes.cs" />
+    <Compile Include="ISolutionHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeDeclaration.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
