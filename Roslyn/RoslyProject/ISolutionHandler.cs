@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Linq;
@@ -28,6 +29,17 @@ namespace RoslyProject
             m_sln = sln;
             m_workspace = MSBuildWorkspace.Create();
             m_solution = await m_workspace.OpenSolutionAsync(sln);
+
+            //m_workspace
+        }
+        public void CloseSolution()
+        {
+            if(m_solution!=null)
+            {
+                m_workspace.CloseSolution();
+                m_solution = null;
+            }
+
         }
 
         public SSolution m_solu = new SSolution();
@@ -53,10 +65,10 @@ namespace RoslyProject
             m_solu.SaveTypeList("TypeList.txt");
         }
 
-        public static void LogError(string s)
-        {
-            Console.WriteLine(s);
-        }
+        //public static void LogError(string s)
+        //{
+        //    Console.WriteLine(s);
+        //}
     }
 
     //重命名
@@ -71,6 +83,9 @@ namespace RoslyProject
         public int AllCount;    //总替换次数
         public int CurCount;    //当前替换次数
 
+        public int pass_cmd = 1;   //成员 函数 类型..
+        public int compile_fails = 0;
+
         public async Task beginReplace(TypeDeclaration_t tdt, MemberDeclaration_t md, string FilePath)
         {
             this.ref_tdt = tdt;
@@ -84,9 +99,13 @@ namespace RoslyProject
             if (m_solution == null)
             {
                 m_solution = await m_workspace.OpenSolutionAsync(this.m_sln);
+                //if(m_solution!= m_workspace.CurrentSolution)
+                //{
+                //    CCLog.Error("m_solution!= m_workspace.CurrentSolution");
+                //}
                 if (m_solution == null)
                 {
-                    LogError("!!!!!!!!!!!!!!!OpenSolutionAsync fail.");
+                    CCLog.Error("!!!!!!!!!!!!!!!OpenSolutionAsync fail."+ this.m_sln);
                 }
             }
         }
@@ -113,35 +132,126 @@ namespace RoslyProject
             //}
         }
 
+
         //保存并清空...
-        public void SaveNewSolution()
+        public bool SaveNewSolution()
         {
             if (newSolution != null)
             {
+                //编译大工程还有问题，可能是依赖？？
+                //bool res = Compiler.CompileSolution(newSolution, ".");
+                //CCLog.Info("CompileSolution:"+ res);
+
+                //if (m_solution != m_workspace.CurrentSolution)
+                //    m_solution = m_workspace.CurrentSolution;
                 bool b = m_workspace.TryApplyChanges(newSolution);
-                m_workspace.CloseSolution();
-
-                AllCount += CurCount;    //总替换次数
-                LogError(" TryApplyChanges = " + b + ";AllCount=" + AllCount + ";CurCount=" + CurCount);
+                if(m_solution != m_workspace.CurrentSolution)
+                    m_solution = m_workspace.CurrentSolution;
+                //if(m_solution != newSolution)
+                //{
+                //    CCLog.Error("m_solution != newSolution");//保存完后，会生成新的？
+                //}
                 newSolution = null;
-                m_solution = null;
+                //m_solution = null;
+                //m_workspace.CloseSolution();
 
+                //GC.Collect();
+                return b;
+            }
+            return false;
+        }
+
+        //检查结果:
+        void PostRenameSymbolAsync(Document document, ISymbol typeSymbol)
+        {
+            bool b = SaveNewSolution(); // workspace.TryApplyChanges(newSolution);
+
+            CurCount++;
+
+            string sTip = string.Format("{0} RenameSymbol {1} to {2};res={3};CurCount={4}",
+                document.Name, typeSymbol, newName, b, CurCount);
+            CCLog.Info(sTip);
+            //CCLog.Error(" TryApplyChanges = " + b + ";AllCount=" + AllCount + ";CurCount=" + CurCount);
+                             //尝试编译？ 
+        }
+
+        //
+        public void CheckCompileAndCommit()
+        {
+            if (CurCount>0)
+            {
+                AllCount += CurCount;    //总替换次数
                 CurCount = 0;    //当前替换次数
 
-                GC.Collect();
+                int ExitCode = RumCmd(MSBuild, m_sln + param);
+                if (ExitCode == 1)
+                {
+                    CCLog.Error(string.Format("=== Compile Fail: {0}==>{1}", ref_tdt.Identifier, ref_tdt.NewName));
+                    RumCmd(git_ext, "reset HEAD");
+                    RumCmd(git_ext, "checkout -- .");
+
+                    //强制重新载入工程...
+                    m_workspace.CloseSolution();
+                    m_solution = null;
+                    compile_fails++;
+                }
+                else
+                {
+                    RumCmd(git_ext, "add .");
+                    RumCmd(git_ext, string.Format("commit -m \"{0}==>{1} ;Tool Commits\"", ref_tdt.Identifier, ref_tdt.NewName));//
+                }
+            }
+        }
+
+
+        static string MSBuild = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\amd64\MSBuild.exe ";
+        //string sln  = @"G:\Aotu\worksapce100\DClient2\Trunk\Trunk.sln";
+        static string param = @" /maxcpucount /p:Configuration=Debug /p:AllowUnsafeBlocks=true";
+        static string git_ext = @"G:\ToolBase\SmartGit/git/bin/git.exe";
+
+        static int RumCmd(string fileName, string arguments)
+        {
+            Process exep = new Process();
+            exep.StartInfo.FileName = fileName; //命令
+            exep.StartInfo.Arguments = arguments;//m_sln + param
+            exep.StartInfo.UseShellExecute = false; //不启用shell启动进程
+            exep.StartInfo.RedirectStandardInput = true; // 重定向输入
+            exep.StartInfo.RedirectStandardOutput = true; // 重定向标准输出
+            exep.StartInfo.RedirectStandardError = true; // 重定向错误输出 
+            exep.StartInfo.CreateNoWindow = true; // 不创建新窗口
+            exep.OutputDataReceived += OnOutputDataReceived;
+            exep.Start();
+            //Process exep = Process.Start(fileName, arguments);
+            try
+            {
+                string output = exep.StandardOutput.ReadToEnd();
+            }
+            catch (Exception e)
+            {
+
+            }
+            exep.WaitForExit();
+            return exep.ExitCode;
+        }
+
+        private static void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e != null && !string.IsNullOrEmpty(e.Data))
+            {
+               // Debug.Log(e.Data);
             }
         }
 
         //查找对应的节点
         BaseMemberDeclaration_t FindSyntaxNode()
         {
-            List<TypeDeclaration_t> ls = new List<TypeDeclaration_t>();
-            ref_tdt.declList(ls);
+            List<TypeDeclaration_t> ref_ls = new List<TypeDeclaration_t>();
+            ref_tdt.declList(ref_ls);
             for (int i = 0; i < m_dtl.typelist.Count; ++i)
             {
                 TypeDeclaration_t td = m_dtl.typelist[i];
 
-                TypeDeclaration_t dst = FindTypeDeclaration(td, ls, 0); //类型也要符合...
+                TypeDeclaration_t dst = FindTypeDeclaration(td, ref_ls, 0); //类型也要符合...
                 if (dst != null)
                 {
                     return FindMemberSyntaxNode(dst);
@@ -149,25 +259,34 @@ namespace RoslyProject
             }
             return null;
         }
-        TypeDeclaration_t FindTypeDeclaration(TypeDeclaration_t td, List<TypeDeclaration_t> ls, int index)
+
+        /// <param name="td"></param>
+        /// <param name="ref_ls"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        TypeDeclaration_t FindTypeDeclaration(TypeDeclaration_t td, List<TypeDeclaration_t> ref_ls, int index)
         {
             if (td == null)
                 return null;
 
-            bool bLast = ls.Count == index + 1;
-            if (td.Identifier == ls[index].Identifier)
+            bool bLast = ref_ls.Count == index + 1;
+            if (td.Identifier == ref_ls[index].Identifier)
             {
                 if (bLast)
+                {
                     return td;
+                }
 
                 for (int i = 0; i < td.Members.Count; ++i)
                 {
                     MemberDeclaration_t md = td.Members[i];
                     if (md.pType != null)
                     {
-                        TypeDeclaration_t sub = FindTypeDeclaration(md.pType, ls, index + 1);
+                        TypeDeclaration_t sub = FindTypeDeclaration(md.pType, ref_ls, index + 1);
                         if (sub != null)
+                        {
                             return sub;
+                        }
                     }
                 }
             }
@@ -186,12 +305,15 @@ namespace RoslyProject
                     if (md.Identifier == ref_md.Identifier && md.Field == ref_md.Field)
                     {
                         newName = "_ZTest"+ md.Identifier;// new string(md.Identifier.ToCharArray().Reverse().ToArray());
+                        ref_md.NewName = newName;//保存新名字：
                         return md;
                     }
                 }
                 return null;
             }
             newName = "_ZTest" + td.Identifier;// new string(td.Identifier.ToCharArray().Reverse().ToArray());
+            
+            ref_tdt.NewName = newName;//保存新名字：
             return td;
         }
 
@@ -207,7 +329,7 @@ namespace RoslyProject
             BaseMemberDeclaration_t memberDel = FindSyntaxNode();
             if (memberDel == null)
             {
-                LogError("Run: 没有找到 " + memberDel);
+                CCLog.Error("Run: 没有找到 " + memberDel);
                 return;
             }
             SyntaxNode typeDecl = memberDel.Syntax;
@@ -242,7 +364,7 @@ namespace RoslyProject
 
             if (typeSymbol == null)
             {
-                LogError("Run: 没有找到typeSymbol" + typeDecl);
+                CCLog.Error("Run: 没有找到typeSymbol" + typeDecl);
                 return;
             }
             // 如果是重载了MonoBehavior的几个函数，这里要过滤掉
@@ -251,15 +373,32 @@ namespace RoslyProject
                 return;
             }
 
+            //if(pass_cmd == 1)
+            //{
+            //    if (ref_md == null)
+            //        return;
+            //    if (typeSymbol.Kind != SymbolKind.Field)
+            //        return;
+            //}
+            //else if (pass_cmd == 2)
+            //{
+            //    if (typeSymbol.Kind != SymbolKind.Method)
+            //        return;
+            //}
+            if (typeSymbol.Kind == SymbolKind.Method && ref_tdt.bMemberSaved == false)
+            {
+                CheckCompileAndCommit();
+                //首先保存一下
+                ref_tdt.bMemberSaved = true;
+            }
+
             // Produce a new solution that has all references to that type renamed, including the declaration.
             var originalSolution = document.Project.Solution;
             var optionSet = originalSolution.Workspace.Options;
             newSolution = await Renamer.RenameSymbolAsync(document.Project.Solution, typeSymbol, newName, optionSet, cancellationToken).ConfigureAwait(false);
             //AutoSaveSolution(newSolution, document.Project.Solution);
-            bool b = false;// workspace.TryApplyChanges(newSolution);
-            CurCount++;
-            LogError(string.Format("{0} RenameSymbol {1} to {2};res={3};CurCount={4}",
-                document.Name, typeSymbol, newName, b, CurCount));
+
+            PostRenameSymbolAsync(document, typeSymbol);
         }
 
 
@@ -301,9 +440,9 @@ namespace RoslyProject
                 if (sy.Name == attrToken)// is System.NonSerializedAttribute
                 {
                     return true;
-                    //LogError("sy is System.NonSerializedAttribute");
+                    //CCLog.Error("sy is System.NonSerializedAttribute");
                 }
-                // LogError(attr.ToString());
+                // CCLog.Error(attr.ToString());
             }
             return false;
         }
@@ -311,15 +450,16 @@ namespace RoslyProject
         //ScriptableObject
         static bool ShouldIgnoreMonoBehaviorKnownFunc(ISymbol typeSymbol)
         {
+            //虚函数(虚属性)过滤..因为某些虚函数可能来自于DLL，直接的替换，可能导致错误...TODO: 带有NEW标记的？
+            if (typeSymbol.IsOverride)
+            {
+                return true;
+            }
+
             //if func?
             if (typeSymbol.Kind != SymbolKind.Method)
             {
                 return false;
-            }
-            //虚函数过滤..因为某些虚函数可能来自于DLL，直接的替换，可能导致错误...TODO: 带有NEW标记的？
-            if (typeSymbol.IsOverride)
-            {
-                return true;
             }
 
             INamedTypeSymbol parentType = typeSymbol.ContainingType;
@@ -333,7 +473,9 @@ namespace RoslyProject
             "OnTriggerEnter", "OnTriggerStay" , "OnTriggerExit" ,
             "OnCollisionStay" , "OnCollisionExit" , "OnCollisionEnter" ,
             "OnMouseDown" , "OnMouseEnter" , "OnMouseExit" , "OnMouseUp" , "OnMouseDrag" , "OnMouseOver", "OnMouseUpAsButton"  ,
-            "OnDrawGizmosSelected", "OnDrawGizmos", "OnGUI" , "OnLevelWasLoaded"
+            "OnDrawGizmosSelected", "OnDrawGizmos", "OnGUI" , "OnLevelWasLoaded",
+            //特定的接口类..也需要排查
+            "Compare","Dispose"
         };//, "" 
 
         static bool IsMonoBehaviorKnownFunc(string name)

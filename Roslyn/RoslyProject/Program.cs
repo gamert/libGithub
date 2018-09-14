@@ -13,7 +13,8 @@ namespace Walterlv.Demo.Roslyn
 
         static void Main(string[] args)
         {
-            //DumpSolutionTypes.DumpAllTypesAsync(@"G:\GitHub\dotnet\TestRoslyn\Samples\ConsoleApp1\ConsoleApp1.sln",false).Wait();
+            CCLog.Debug("Main");
+           // DumpSolutionTypes.DumpAllTypesAsync(@"G:\GitHub\dotnet\TestRoslyn\Samples\ConsoleApp1\ConsoleApp1.sln",false).Wait();
             DumpSolutionTypes.DumpAllTypesAsync(@"G:\Aotu\worksapce100\DClient2\Trunk\Trunk.sln",true).Wait();
 
         }

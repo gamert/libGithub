@@ -17,6 +17,8 @@ namespace RoslyProject
         public string Field;        //类型,Class? Field?
         public string Identifier;
         public MemberDeclarationSyntax Syntax;  //保存 BaseTypeDeclarationSyntax 
+
+        public string NewName = "";
     }
     //成员声明:
     public class MemberDeclaration_t: BaseMemberDeclaration_t
@@ -35,6 +37,8 @@ namespace RoslyProject
     //类型声明:
     public class TypeDeclaration_t : BaseMemberDeclaration_t
     {
+        public bool bMemberSaved = false;
+
         //父亲列表:
         public void declList(List<TypeDeclaration_t> ls)
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -61,6 +62,8 @@ namespace RoslyProject
             await handle.InitSolution(sln);
             await SolutionAsync(handle, useInclude);
             //
+            string path = Path.GetDirectoryName(sln);
+            Directory.SetCurrentDirectory(path);
             CRenameTokenHandler rhandle = new CRenameTokenHandler();
             rhandle.m_workspace = handle.m_workspace;
             rhandle.newSolution = handle.m_solution;
@@ -133,17 +136,31 @@ namespace RoslyProject
         public static async Task replaceAllSolutionTypeMemberID(CRenameTokenHandler rhandle, bool useInclude)
         {
             int limit = 0;
+
+            CCLog.Info(string.Format("=== replaceAllSolutionTypeMemberID Count: {0} ", rhandle.m_solu.doctypelist.Count));
+
+            int types = 0;
+            rhandle.pass_cmd = 1;
             for (int i = 0; i < rhandle.m_solu.doctypelist.Count; ++i)
             {
                 DocTypeList_t dtt = rhandle.m_solu.doctypelist[i];
                 for (int j = 0; j < dtt.typelist.Count; ++j)
                 {
                     TypeDeclaration_t tdt = dtt.typelist[j];
+
+                    CCLog.Debug(string.Format("=== replaceAllSolutionTypeMemberID Type: {0}/{1} ;Doc {2}/{3};{4}/{5}", j, dtt.typelist.Count,i, rhandle.m_solu.doctypelist.Count, tdt.Identifier, dtt.Name));
+
                     await replaceTypeMemberID(rhandle, dtt.FilePath, tdt, useInclude);
+
+                    types++;
                 }
-                if((i%10) == 9)
-                    rhandle.SaveNewSolution();
+                //if((i%100) == 99)
+                //    rhandle.SaveNewSolution();
+//                if((i%20) == 19)
+                    rhandle.CheckCompileAndCommit();
             }
+            rhandle.CheckCompileAndCommit();
+            CCLog.Info(string.Format("=== replaceAllSolutionTypeMemberID types: {0} ;compile_fails: {1}", types, rhandle.compile_fails));
         }
 
         //替换一个类...

@@ -9,9 +9,8 @@ public class NewBehaviourScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-		tseT aa = new tseT();
-	    Debug.Log(aa);
-	
+        Test aa = new Test();
+        Debug.Log(aa);
         m_kScriptSpellProc = kScriptSpellProc.SSP_7;
         Debug.Log(m_kScriptSpellProc);
     }
