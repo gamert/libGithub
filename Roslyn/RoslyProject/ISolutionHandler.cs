@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -78,6 +79,7 @@ namespace RoslyProject
         public TypeDeclaration_t ref_tdt;   //动态参数..
         public MemberDeclaration_t ref_md;
         public string newName = "";
+        public StringBuilder m_ReplaceHis = new StringBuilder();
 
         public Solution newSolution;   //下一个可以使用的...
         public int AllCount;    //总替换次数
@@ -145,13 +147,20 @@ namespace RoslyProject
                 //if (m_solution != m_workspace.CurrentSolution)
                 //    m_solution = m_workspace.CurrentSolution;
                 bool b = m_workspace.TryApplyChanges(newSolution);
-                if(m_solution != m_workspace.CurrentSolution)
+                if (m_solution != m_workspace.CurrentSolution)
                     m_solution = m_workspace.CurrentSolution;
+
                 //if(m_solution != newSolution)
                 //{
                 //    CCLog.Error("m_solution != newSolution");//保存完后，会生成新的？
                 //}
                 newSolution = null;
+                if(m_solution.ProjectIds.Count == 0)
+                {
+                    CCLog.Error("SaveNewSolution: m_solution.ProjectIds.Count == 0");
+                    m_solution = null;
+                    m_workspace.CloseSolution();
+                }
                 //m_solution = null;
                 //m_workspace.CloseSolution();
 
@@ -165,14 +174,14 @@ namespace RoslyProject
         void PostRenameSymbolAsync(Document document, ISymbol typeSymbol)
         {
             bool b = SaveNewSolution(); // workspace.TryApplyChanges(newSolution);
-
             CurCount++;
 
             string sTip = string.Format("{0} RenameSymbol {1} to {2};res={3};CurCount={4}",
                 document.Name, typeSymbol, newName, b, CurCount);
-            CCLog.Info(sTip);
-            //CCLog.Error(" TryApplyChanges = " + b + ";AllCount=" + AllCount + ";CurCount=" + CurCount);
-                             //尝试编译？ 
+            if(b)
+                CCLog.Info(sTip);
+            else
+                CCLog.Error(sTip);
         }
 
         //
@@ -183,10 +192,13 @@ namespace RoslyProject
                 AllCount += CurCount;    //总替换次数
                 CurCount = 0;    //当前替换次数
 
-                int ExitCode = RumCmd(MSBuild, m_sln + param);
-                if (ExitCode == 1)
+                bool bOk = Compiler.CompileSolution(m_solution, "");
+                //CCLog.Info("CompileSolution:" + res);
+
+                //bOk = RumCmd(MSBuild, m_sln + param) == 0;
+                if (!bOk)
                 {
-                    CCLog.Error(string.Format("=== Compile Fail: {0}==>{1}", ref_tdt.Identifier, ref_tdt.NewName));
+                    CCLog.Error(string.Format("=== Compile Fail: {0}==>{1}; his: {2}", ref_tdt.Identifier, ref_tdt.NewName, m_ReplaceHis.ToString()));
                     RumCmd(git_ext, "reset HEAD");
                     RumCmd(git_ext, "checkout -- .");
 
@@ -200,6 +212,8 @@ namespace RoslyProject
                     RumCmd(git_ext, "add .");
                     RumCmd(git_ext, string.Format("commit -m \"{0}==>{1} ;Tool Commits\"", ref_tdt.Identifier, ref_tdt.NewName));//
                 }
+
+                m_ReplaceHis.Clear();
             }
         }
 
@@ -292,7 +306,7 @@ namespace RoslyProject
             }
             return null;
         }
-
+        const string PREFIX = "__ZRoslyn";
         //从匹配的Type中找到
         BaseMemberDeclaration_t FindMemberSyntaxNode(TypeDeclaration_t td)
         {
@@ -302,19 +316,24 @@ namespace RoslyProject
                 {
                     MemberDeclaration_t md = td.Members[j];
                     //如果是儿子？？
-                    if (md.Identifier == ref_md.Identifier && md.Field == ref_md.Field)
+                    if (md.Identifier == ref_md.Identifier && md.Field == ref_md.Field && !md.Identifier.StartsWith(PREFIX))
                     {
-                        newName = "_ZTest"+ md.Identifier;// new string(md.Identifier.ToCharArray().Reverse().ToArray());
+                        newName = PREFIX + md.Identifier;// new string(md.Identifier.ToCharArray().Reverse().ToArray());
                         ref_md.NewName = newName;//保存新名字：
+                        m_ReplaceHis.AppendFormat("{0}==>{1};", md.Identifier, newName);
                         return md;
                     }
                 }
                 return null;
             }
-            newName = "_ZTest" + td.Identifier;// new string(td.Identifier.ToCharArray().Reverse().ToArray());
-            
-            ref_tdt.NewName = newName;//保存新名字：
-            return td;
+            if(!td.Identifier.StartsWith(PREFIX))
+            {
+                newName = PREFIX + td.Identifier;// new string(td.Identifier.ToCharArray().Reverse().ToArray());
+                ref_tdt.NewName = newName;//保存新名字：
+                m_ReplaceHis.AppendFormat("{0}==>{1};", td.Identifier, newName);
+                return td;
+            }
+            return null;
         }
 
         //}
@@ -329,7 +348,7 @@ namespace RoslyProject
             BaseMemberDeclaration_t memberDel = FindSyntaxNode();
             if (memberDel == null)
             {
-                CCLog.Error("Run: 没有找到 " + memberDel);
+                CCLog.Error("Run: 没有找到ref_tdt= " + this.ref_tdt.Identifier + ";ref_md="+ ref_md);
                 return;
             }
             SyntaxNode typeDecl = memberDel.Syntax;
@@ -368,7 +387,7 @@ namespace RoslyProject
                 return;
             }
             // 如果是重载了MonoBehavior的几个函数，这里要过滤掉
-            if (ShouldIgnoreMonoBehaviorKnownFunc(typeSymbol))
+            if (ShouldIgnoreKnownFunc(typeSymbol))
             {
                 return;
             }
@@ -385,12 +404,6 @@ namespace RoslyProject
             //    if (typeSymbol.Kind != SymbolKind.Method)
             //        return;
             //}
-            if (typeSymbol.Kind == SymbolKind.Method && ref_tdt.bMemberSaved == false)
-            {
-                CheckCompileAndCommit();
-                //首先保存一下
-                ref_tdt.bMemberSaved = true;
-            }
 
             // Produce a new solution that has all references to that type renamed, including the declaration.
             var originalSolution = document.Project.Solution;
@@ -399,6 +412,16 @@ namespace RoslyProject
             //AutoSaveSolution(newSolution, document.Project.Solution);
 
             PostRenameSymbolAsync(document, typeSymbol);
+
+            //bug: 因为编译失败的回滚会导致doc等变化，这可能是是导致 #29876
+            // || (typeSymbol.Kind == SymbolKind.Method && ref_tdt.bMemberSaved == false)
+            //if (CurCount > 4)
+            //{
+            //    CheckCompileAndCommit();
+            //    //首先保存一下
+            //    //if (typeSymbol.Kind == SymbolKind.Method)
+            //    //    ref_tdt.bMemberSaved = true;
+            //}
         }
 
 
@@ -447,8 +470,34 @@ namespace RoslyProject
             return false;
         }
 
+        //https://stackoverflow.com/questions/42074792/roslyn-is-symbol-implementation-of-interface
+        static bool IsInterfaceImplementation(IMethodSymbol method)
+        {
+            //var disposeMethodSymbol = ...
+            //var type = disposeMethodSymbol.ContainingType;
+            //var isInterfaceImplementaton = type.FindImplementationForInterfaceMember(
+            //            type.Interfaces.Single().
+            //            GetMembers().OfType<IMethodSymbol>().Single()) == disposeMethodSymbol;
+
+            INamedTypeSymbol containerT = method.ContainingType;
+            ImmutableArray<INamedTypeSymbol> inters = containerT.AllInterfaces;
+            IEnumerable<IMethodSymbol> en = inters.SelectMany(@interface => @interface.GetMembers().OfType<IMethodSymbol>());
+            return en.Any(delegate (ISymbol interfaceMethod)
+                        {
+                            ISymbol sym = containerT.FindImplementationForInterfaceMember(interfaceMethod);
+                            return method.Equals(sym);
+                        }
+            );
+            //return method.ContainingType.AllInterfaces.SelectMany(@interface => @interface.GetMembers().OfType<IMethodSymbol>()).Any(interfaceMethod => method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod).Equals(method));
+        }
+
+        static bool IsInterfaceImplementation(IPropertySymbol method)
+        {
+            return method.ContainingType.AllInterfaces.SelectMany(@interface => @interface.GetMembers().OfType<IPropertySymbol>()).Any(interfaceMethod => method.Equals(method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod)));
+        }
+
         //ScriptableObject
-        static bool ShouldIgnoreMonoBehaviorKnownFunc(ISymbol typeSymbol)
+        static bool ShouldIgnoreKnownFunc(ISymbol typeSymbol)
         {
             //虚函数(虚属性)过滤..因为某些虚函数可能来自于DLL，直接的替换，可能导致错误...TODO: 带有NEW标记的？
             if (typeSymbol.IsOverride)
@@ -457,14 +506,70 @@ namespace RoslyProject
             }
 
             //if func?
-            if (typeSymbol.Kind != SymbolKind.Method)
+            if (typeSymbol.Kind == SymbolKind.Method)
             {
-                return false;
+                IMethodSymbol ms = typeSymbol as IMethodSymbol;
+                if(IsInterfaceImplementation(ms))
+                {
+                    return true;
+                }
+                INamedTypeSymbol parentType = typeSymbol.ContainingType;
+                if(IsNamedBaseType(parentType, "UnityEngine.MonoBehaviour"))
+                {
+                    return IsMonoBehaviorKnownFunc(typeSymbol.Name);
+                }
             }
-
-            INamedTypeSymbol parentType = typeSymbol.ContainingType;
-            return IsMonoBehaviorKnownFunc(typeSymbol.Name);
+            else if (typeSymbol.Kind == SymbolKind.Property)
+            {
+                IPropertySymbol ms = typeSymbol as IPropertySymbol;
+                if(IsInterfaceImplementation(ms))
+                {
+                    return true;
+                } 
+            }
+            else if (typeSymbol.Kind == SymbolKind.Field)
+            {
+                INamedTypeSymbol parentType = typeSymbol.ContainingType;
+                if (IsNamedBaseType(parentType, "UnityEngine.ScriptableObject"))
+                {
+                    return true;
+                }
+                if (IsNamedBaseType(parentType, "UnityEngine.MonoBehaviour"))
+                {
+                    if (typeSymbol.DeclaredAccessibility == Accessibility.Public)
+                    {
+                        bool has = hasAttribute(typeSymbol, "HideInInspector");                
+                        return !has;
+                    }
+                    return false;
+                }
+            }
+            else if (typeSymbol.Kind == SymbolKind.NamedType)
+            {
+                INamedTypeSymbol parentType = typeSymbol as INamedTypeSymbol;
+                if (IsNamedBaseType(parentType, "UnityEngine.MonoBehaviour"))
+                {
+                    return true;
+                }
+            }
+            //todo: 类型是否需要检查？ScriptableObject
+            //
+            return false;
         }
+
+        //baseTypeName : "System.Web.UI.Page"
+        protected static bool IsNamedBaseType(INamedTypeSymbol iSymbol,string baseTypeName)
+        {
+            INamedTypeSymbol symbolBaseType = iSymbol?.BaseType;
+            while (symbolBaseType != null)
+            {
+                if (symbolBaseType.ToString() == baseTypeName)
+                    return true;
+                symbolBaseType = symbolBaseType.BaseType;
+            }
+            return false;
+        }
+
         static string[] s_MonoBehaviorKnownFunc = new string[] {
             "Awake","Start","Update","LateUpdate", "FixedUpdate" ,
             "OnEnable" , "OnDisable","OnDestroy",
@@ -475,7 +580,7 @@ namespace RoslyProject
             "OnMouseDown" , "OnMouseEnter" , "OnMouseExit" , "OnMouseUp" , "OnMouseDrag" , "OnMouseOver", "OnMouseUpAsButton"  ,
             "OnDrawGizmosSelected", "OnDrawGizmos", "OnGUI" , "OnLevelWasLoaded",
             //特定的接口类..也需要排查
-            "Compare","Dispose"
+            //"Compare","Dispose"//,"Equals"
         };//, "" 
 
         static bool IsMonoBehaviorKnownFunc(string name)

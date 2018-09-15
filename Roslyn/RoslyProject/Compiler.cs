@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.MSBuild;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -230,7 +231,26 @@ namespace RoslyProject
                 AddFormatPrint("Building: {0}", project.FilePath);
                 try
                 {
+                    //MetadataReference[] references = new MetadataReference[]
+                    //{
+                    //    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    //    MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+                    //};
                     Compilation projectCompilation = project.GetCompilationAsync().Result;
+                    //bug??: if sln has 
+                    /*
+                     *   <ItemGroup>
+                            <ProjectReference Include="Trunk.Plugins.csproj">
+                              <Project>{2BBE5B18-F7D1-B358-6FC0-86A09DE3F912}</Project>
+                              <Name>Trunk.Plugins</Name>
+                            </ProjectReference>
+                     */
+                    foreach (MetadataReference refs in projectCompilation.ExternalReferences)
+                    {
+                        AddFormatPrint("refs: {0}", refs.Display);
+                        break;
+                    }
+
                     if (null != projectCompilation && !string.IsNullOrEmpty(projectCompilation.AssemblyName))
                     {
                         string fileName = string.Format("{0}.dll", projectCompilation.AssemblyName);
@@ -240,14 +260,15 @@ namespace RoslyProject
                             OutputFiles.Add(fullPathName, true);
                         }
 
-                        var diagnostics = projectCompilation.GetDiagnostics();
-                        var warnDiagnostics = diagnostics.Where(x => x.Severity == DiagnosticSeverity.Warning).ToArray();
-                        var errorDiagnostics = diagnostics.Where(x => x.Severity == DiagnosticSeverity.Error).ToArray();
+                        ImmutableArray<Diagnostic> diagnostics = projectCompilation.GetDiagnostics();
+                        Diagnostic[] errorDiagnostics = diagnostics.Where(x => x.Severity == DiagnosticSeverity.Error).ToArray();
 
-                        foreach (var e in errorDiagnostics.Concat(warnDiagnostics).ToArray())
-                        {
-                            AddFormatPrint("{0}: {1}", e.Severity.ToString(), e.ToString());
-                        }
+                        //Diagnostic []warnDiagnostics = diagnostics.Where(x => x.Severity == DiagnosticSeverity.Warning).ToArray();
+                        //foreach (var e in errorDiagnostics.Concat(warnDiagnostics).ToArray())
+                        //{
+                        //    AddFormatPrint("{0}: {1}", e.Severity.ToString(), e.ToString());
+                        //    break;
+                        //}
 
                         if (errorDiagnostics.Any())
                         {
@@ -259,24 +280,31 @@ namespace RoslyProject
                         {
                             AddFormatPrint("Build successfully.");
 
-                            using (var stream = new MemoryStream())
+                            if(string.IsNullOrEmpty(outputDir))
                             {
-                                EmitResult result = projectCompilation.Emit(stream);
-                                AddFormatPrint("{0}  -->  {1}", project.Name, fullPathName);
-                                if (result.Success)
+                                //only test
+                            }
+                            else
+                            {
+                                using (var stream = new MemoryStream())
                                 {
-                                    using (FileStream file = File.Create(fullPathName))
+                                    EmitResult result = projectCompilation.Emit(stream);
+                                    AddFormatPrint("{0}  -->  {1}", project.Name, fullPathName);
+                                    if (result.Success)
                                     {
-                                        stream.Seek(0, SeekOrigin.Begin);
-                                        stream.CopyTo(file);
+                                        using (FileStream file = File.Create(fullPathName))
+                                        {
+                                            stream.Seek(0, SeekOrigin.Begin);
+                                            stream.CopyTo(file);
+                                        }
+                                        AddFormatPrint("Output successfully.");
                                     }
-                                    AddFormatPrint("Output successfully.");
-                                }
-                                else
-                                {
-                                    OutputFiles[fullPathName] = false;
-                                    AddFormatPrint("Output failed.");
-                                    success = false;
+                                    else
+                                    {
+                                        OutputFiles[fullPathName] = false;
+                                        AddFormatPrint("Output failed.");
+                                        success = false;
+                                    }
                                 }
                             }
                         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -13,8 +14,11 @@ namespace Walterlv.Demo.Roslyn
 
         static void Main(string[] args)
         {
+            String rootPath = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+            String projPath = Path.GetFullPath(@"..\..\..\") + @"Samples\ConsoleApp1\ConsoleApp1.sln";
+
             CCLog.Debug("Main");
-           // DumpSolutionTypes.DumpAllTypesAsync(@"G:\GitHub\dotnet\TestRoslyn\Samples\ConsoleApp1\ConsoleApp1.sln",false).Wait();
+            //DumpSolutionTypes.DumpAllTypesAsync(projPath,false).Wait();
             DumpSolutionTypes.DumpAllTypesAsync(@"G:\Aotu\worksapce100\DClient2\Trunk\Trunk.sln",true).Wait();
 
         }

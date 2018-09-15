@@ -80,9 +80,15 @@ namespace RoslyProject
             CancellationToken cancellationToken = default(CancellationToken);
             if(handle.m_solution == null)
             {
-                Console.WriteLine("SolutionAsync: solution == null");
+                CCLog.Error("SolutionAsync: solution == null");
                 return;
             }
+            //else
+            //{
+            //    bool res = Compiler.CompileSolution(handle.m_solution, ".");
+            //    CCLog.Info("CompileSolution:" + res);
+            //    return;
+            //}
 
             //提取所有的Type
             IEnumerable<Project> Projects = handle.m_solution.Projects;
@@ -139,16 +145,26 @@ namespace RoslyProject
 
             CCLog.Info(string.Format("=== replaceAllSolutionTypeMemberID Count: {0} ", rhandle.m_solu.doctypelist.Count));
 
+            int StartSign = 0;
+            string StartDoc = "ACTAnimConfig.cs";
+            string StartType = "ACTAnimConfig";
+
             int types = 0;
             rhandle.pass_cmd = 1;
             for (int i = 0; i < rhandle.m_solu.doctypelist.Count; ++i)
             {
                 DocTypeList_t dtt = rhandle.m_solu.doctypelist[i];
+                if (StartSign == 1 && StartDoc != dtt.Name)
+                    continue;
                 for (int j = 0; j < dtt.typelist.Count; ++j)
                 {
                     TypeDeclaration_t tdt = dtt.typelist[j];
+                    //判断开始类型..
+                    if (StartSign == 1 && StartType != tdt.Identifier)
+                        continue;
+                    StartSign = 0;
 
-                    CCLog.Debug(string.Format("=== replaceAllSolutionTypeMemberID Type: {0}/{1} ;Doc {2}/{3};{4}/{5}", j, dtt.typelist.Count,i, rhandle.m_solu.doctypelist.Count, tdt.Identifier, dtt.Name));
+                    //CCLog.Debug(string.Format("=== replaceAllSolutionTypeMemberID Type: {0}/{1} ;Doc {2}/{3};{4}/{5}", j, dtt.typelist.Count,i, rhandle.m_solu.doctypelist.Count, tdt.Identifier, dtt.Name));
 
                     await replaceTypeMemberID(rhandle, dtt.FilePath, tdt, useInclude);
 
@@ -156,7 +172,7 @@ namespace RoslyProject
                 }
                 //if((i%100) == 99)
                 //    rhandle.SaveNewSolution();
-//                if((i%20) == 19)
+                if((i%20) == 19)
                     rhandle.CheckCompileAndCommit();
             }
             rhandle.CheckCompileAndCommit();

@@ -21,7 +21,7 @@ namespace RoslyProject
         public string NewName = "";
     }
     //成员声明:
-    public class MemberDeclaration_t: BaseMemberDeclaration_t
+    public class MemberDeclaration_t : BaseMemberDeclaration_t
     {
         //public TypeDeclarationSyntax container; //容器类...
         public TypeDeclaration_t pType;         //子类
@@ -31,6 +31,10 @@ namespace RoslyProject
             Identifier = i;
             Syntax = _syntax;
             //container = _container;
+        }
+        public override string ToString()
+        {
+            return Field + ": " + Identifier;
         }
     }
 
@@ -42,7 +46,7 @@ namespace RoslyProject
         //父亲列表:
         public void declList(List<TypeDeclaration_t> ls)
         {
-            ls.Insert(0,this);
+            ls.Insert(0, this);
             if (parent != null)
                 parent.declList(ls);
         }
@@ -93,7 +97,7 @@ namespace RoslyProject
                 MemberDeclarationSyntax member = td.Members[k];
                 HandleMemberDeclarationSyntax(member, tdt);
             }
- //           Console.WriteLine(td);
+            //           Console.WriteLine(td);
         }
 
         static void HandleTypeMember(TypeDeclarationSyntax td, TypeDeclaration_t tdt)
@@ -107,114 +111,118 @@ namespace RoslyProject
 
         static void HandleMemberDeclarationSyntax(MemberDeclarationSyntax member, TypeDeclaration_t tdt)
         {
-                //MemberDeclarationSyntax
-                //
-                if (member is FieldDeclarationSyntax)
+            //MemberDeclarationSyntax
+            //
+            if (member is FieldDeclarationSyntax)
+            {
+                FieldDeclarationSyntax ed = member as FieldDeclarationSyntax;
+                VariableDeclarationSyntax decl = ed.Declaration;
+                if (decl.Variables.Count > 0)
                 {
-                    FieldDeclarationSyntax ed = member as FieldDeclarationSyntax;
-                    VariableDeclarationSyntax decl = ed.Declaration;
-                    if (decl.Variables.Count > 0)
-                    {
-                        VariableDeclaratorSyntax v = decl.Variables[0];
-                        tdt.Members.Add(new MemberDeclaration_t("Field", v.Identifier.Text, ed));
-                    }
-
-                }
-                else if (member is EnumMemberDeclarationSyntax)
-                {
-                    EnumMemberDeclarationSyntax ed = member as EnumMemberDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("EnumMember", ed.Identifier.Text, ed));
-                }
-                else if (member is MethodDeclarationSyntax)
-                {
-                    MethodDeclarationSyntax ed = member as MethodDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("Method", ed.Identifier.Text, ed));
-                }
-                else if (member is PropertyDeclarationSyntax)
-                {
-                    PropertyDeclarationSyntax ed = member as PropertyDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("Property", ed.Identifier.Text, ed));
+                    VariableDeclaratorSyntax v = decl.Variables[0];
+                    tdt.Members.Add(new MemberDeclaration_t("Field", v.Identifier.Text, ed));
                 }
 
-                else if (member is EnumDeclarationSyntax)
-                {
-                    EnumDeclarationSyntax ed = member as EnumDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("Enum", ed.Identifier.Text, ed));
-                }
-                else if (member is EventFieldDeclarationSyntax)
-                {
-                    EventFieldDeclarationSyntax ed = member as EventFieldDeclarationSyntax;
-                    VariableDeclarationSyntax decl = ed.Declaration;
-                    if (decl.Variables.Count > 0)
-                    {
-                        VariableDeclaratorSyntax v = decl.Variables[0];
-                        tdt.Members.Add(new MemberDeclaration_t("EventField", v.Identifier.Text, ed));
-                    }
+            }
+            else if (member is EnumMemberDeclarationSyntax)
+            {
+                EnumMemberDeclarationSyntax ed = member as EnumMemberDeclarationSyntax;
+                tdt.Members.Add(new MemberDeclaration_t("EnumMember", ed.Identifier.Text, ed));
+            }
+            else if (member is MethodDeclarationSyntax)
+            {
+                MethodDeclarationSyntax ed = member as MethodDeclarationSyntax;
+                tdt.Members.Add(new MemberDeclaration_t("Method", ed.Identifier.Text, ed));
+            }
+            else if (member is PropertyDeclarationSyntax)
+            {
+                PropertyDeclarationSyntax ed = member as PropertyDeclarationSyntax;
+                tdt.Members.Add(new MemberDeclaration_t("Property", ed.Identifier.Text, ed));
+            }
 
-                }
-                else if (member is DelegateDeclarationSyntax)
+            else if (member is EventFieldDeclarationSyntax)
+            {
+                EventFieldDeclarationSyntax ed = member as EventFieldDeclarationSyntax;
+                VariableDeclarationSyntax decl = ed.Declaration;
+                if (decl.Variables.Count > 0)
                 {
-                    DelegateDeclarationSyntax ed = member as DelegateDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("Delegate", ed.Identifier.Text, ed));
-                }
-                else if (member is InterfaceDeclarationSyntax)
-                {
-                    InterfaceDeclarationSyntax ed = member as InterfaceDeclarationSyntax;
-                    tdt.Members.Add(new MemberDeclaration_t("Interface", ed.Identifier.Text, ed));
-                    //不需要处理接口的成员，因为会被派生类自动重置掉
-                    //bug: 如果多个类集成接口，那么就可能产生
-                    //1. override属性的成员，就不要处理了，由接口来处理？ 或者是实现接口的...
+                    VariableDeclaratorSyntax v = decl.Variables[0];
+                    tdt.Members.Add(new MemberDeclaration_t("EventField", v.Identifier.Text, ed));
                 }
 
-                else if (member is ClassDeclarationSyntax)
-                {
-                    ClassDeclarationSyntax ed = member as ClassDeclarationSyntax;
+            }
+            else if (member is DelegateDeclarationSyntax)
+            {
+                DelegateDeclarationSyntax ed = member as DelegateDeclarationSyntax;
+                tdt.Members.Add(new MemberDeclaration_t("Delegate", ed.Identifier.Text, ed));
+            }
+            else if (member is InterfaceDeclarationSyntax)
+            {
+                InterfaceDeclarationSyntax ed = member as InterfaceDeclarationSyntax;
+                //tdt.Members.Add(new MemberDeclaration_t("Interface", ed.Identifier.Text, ed));
+                MemberDeclaration_t t = new MemberDeclaration_t("Interface", ed.Identifier.Text, ed);
+                tdt.Members.Add(t);
+                //处理子节点...
+                t.pType = new TypeDeclaration_t(tdt, member as BaseTypeDeclarationSyntax);
+            }
 
-                    MemberDeclaration_t t = new MemberDeclaration_t("Class", ed.Identifier.Text, ed);
-                    tdt.Members.Add(t);
+            else if (member is EnumDeclarationSyntax)
+            {
+                EnumDeclarationSyntax ed = member as EnumDeclarationSyntax;
+                MemberDeclaration_t t = new MemberDeclaration_t("Enum", ed.Identifier.Text, ed);
+                tdt.Members.Add(t);
+                //处理子节点...
+                t.pType = new TypeDeclaration_t(tdt, member as BaseTypeDeclarationSyntax);
+            }
+            else if (member is ClassDeclarationSyntax)
+            {
+                ClassDeclarationSyntax ed = member as ClassDeclarationSyntax;
 
-                    //处理子节点...
-                    t.pType = new TypeDeclaration_t(tdt, member as TypeDeclarationSyntax);
-                }
-                else if (member is StructDeclarationSyntax)
-                {
-                    StructDeclarationSyntax ed = member as StructDeclarationSyntax;
+                MemberDeclaration_t t = new MemberDeclaration_t("Class", ed.Identifier.Text, ed);
+                tdt.Members.Add(t);
 
-                    MemberDeclaration_t t = new MemberDeclaration_t("Struct", ed.Identifier.Text, ed);
-                    tdt.Members.Add(t);
+                //处理子节点...
+                t.pType = new TypeDeclaration_t(tdt, member as TypeDeclarationSyntax);
+            }
+            else if (member is StructDeclarationSyntax)
+            {
+                StructDeclarationSyntax ed = member as StructDeclarationSyntax;
 
-                    //处理子节点...
-                    t.pType = new TypeDeclaration_t(tdt, member as TypeDeclarationSyntax);
-                }
-                else if (member is ConstructorDeclarationSyntax)
-                {
-                    member = member;
-                }
-                else if (member is DestructorDeclarationSyntax)
-                {
-                    //忽略...
-                    member = member;
-                }
-                else if (member is OperatorDeclarationSyntax)
-                {
-                    //忽略...
-                }
-                else if (member is IndexerDeclarationSyntax)
-                {
-                    //忽略...
-                    member = member;
-                }
-                else if (member is ConversionOperatorDeclarationSyntax)
-                {
-                    //忽略...
-                    member = member;
-                }
-                else
-                {
-                    member = member;
-                    //sb.AppendLine("\t\tUnknow;" + member);
-                }
-                //                            sb.AppendLine("\t\t" + member + ";");
+                MemberDeclaration_t t = new MemberDeclaration_t("Struct", ed.Identifier.Text, ed);
+                tdt.Members.Add(t);
+
+                //处理子节点...
+                t.pType = new TypeDeclaration_t(tdt, member as TypeDeclarationSyntax);
+            }
+            else if (member is ConstructorDeclarationSyntax)
+            {
+                member = member;
+            }
+            else if (member is DestructorDeclarationSyntax)
+            {
+                //忽略...
+                member = member;
+            }
+            else if (member is OperatorDeclarationSyntax)
+            {
+                //忽略...
+            }
+            else if (member is IndexerDeclarationSyntax)
+            {
+                //忽略...
+                member = member;
+            }
+            else if (member is ConversionOperatorDeclarationSyntax)
+            {
+                //忽略...
+                member = member;
+            }
+            else
+            {
+                member = member;
+                //sb.AppendLine("\t\tUnknow;" + member);
+            }
+            //                            sb.AppendLine("\t\t" + member + ";");
         }
     }
 
@@ -238,7 +246,7 @@ namespace RoslyProject
     {
         public List<DocTypeList_t> doctypelist = new List<DocTypeList_t>();
 
-        
+
         //把TypeName保存一下: 格式..文档名{文件名...；文件名2....}
         public void SaveTypeList(string fn)
         {
@@ -268,14 +276,14 @@ namespace RoslyProject
         }
 
         //
-        void SaveTypeDeclaration(StringBuilder sb, TypeDeclaration_t tdt,string prefix)
+        void SaveTypeDeclaration(StringBuilder sb, TypeDeclaration_t tdt, string prefix)
         {
             sb.AppendLine(prefix + tdt.Identifier + ";");
             for (int k = 0; k < tdt.Members.Count; ++k)
             {
                 MemberDeclaration_t md = tdt.Members[k];
-                sb.AppendLine(prefix+"\t" + md.Field + ";" + md.Identifier);
-                if(md.pType!=null)
+                sb.AppendLine(prefix + "\t" + md.Field + ";" + md.Identifier);
+                if (md.pType != null)
                 {
                     SaveTypeDeclaration(sb, md.pType, prefix + "\t");
                 }
@@ -297,7 +305,7 @@ namespace RoslyProject
         {
             if (doc_typelist != null)
             {
-                doc_typelist.typelist.Add(new TypeDeclaration_t(null,node));
+                doc_typelist.typelist.Add(new TypeDeclaration_t(null, node));
             }
             return node;// node.Update(lessThanToken, syntaxList, greaterThanToken);
         }
