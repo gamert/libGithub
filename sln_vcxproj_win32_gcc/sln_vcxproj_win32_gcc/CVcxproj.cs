@@ -1,41 +1,47 @@
-﻿using System;
+﻿/*
+ * for covent vs Vcxproj to cross-compiler as android gcc
+ * 2018/11/14
+ * 
+ */
+
+
+using System;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace Helper
 {
-    public class CXmlVcxproj
+    public class CVcxproj
     {
-        XmlDocument doc = new XmlDocument();
-        XmlNode Project = null;
-        public void CreateAndroid(string xmlFilePath)
-        {
-            doc.Load(xmlFilePath);
-            Project = doc.DocumentElement;
+        //用户定义的配置项: -std=gnu++11
+        public string AndroidAPILevel = "android-19";
+        public string pre_PreprocessorDefinitions = "_LINUX;ANDROID;POSIX;GNUC;__ANDROID__;";
+        public string AdditionalOptions = " -Wmultichar -Wno-unused-private-field -Wno-unused-local-typedef -Wno-unused-variable %(AdditionalOptions)";
 
-            InitNew();
-
-            Save(xmlFilePath+".new");
-        }
-
-
-        public XmlDocument xmlDoc = new XmlDocument();
-        public XmlElement rootNode;
+        //新建的Doc
+        public XmlDocument newDoc = new XmlDocument();
+        public XmlElement newRoot;
 
         public XmlElement PropertyGroup_Globals;
+
 
         //根据旧的工程创建一个新的工程文件...
         public void InitNew()
         {
             //创建Xml声明部分，即<?xml
-            xmlDoc.CreateXmlDeclaration("1.0", "utf-8", "yes");
+            XmlDeclaration  decl = newDoc.CreateXmlDeclaration("1.0", "utf-8", "yes");
+            newDoc.AppendChild(decl);
             //创建根节点
-            rootNode = xmlDoc.CreateElement("Project");
-            xmlDoc.AppendChild(xmlDoc);
+            newRoot = newDoc.CreateElement("Project");
+            newDoc.AppendChild(newRoot);
 
             //rootNode
-            rootNode.SetAttribute("DefaultTargets", "Build");
-            rootNode.SetAttribute("ToolsVersion", "15.0");
-            rootNode.SetAttribute("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003");
+            newRoot.SetAttribute("DefaultTargets", "Build");
+            newRoot.SetAttribute("ToolsVersion", "15.0");
+            newRoot.SetAttribute("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003");
 
             // rootNode.SetAttributeNode()
             XmlElement ItemGroup = Project_add_Node("ItemGroup", "Label", "ProjectConfigurations");
@@ -51,16 +57,40 @@ namespace Helper
 
             Project_add_Node("Import", "Project", "$(VCTargetsPath)\\Microsoft.Cpp.Default.props");
 
+            /////////////////////////////////////////////////
+            string rCondition = "'$(Configuration)|$(Platform)'=='Debug|Win32'";
+            //string xpath = ".//PropertyGroup[Condition=\"" + rCondition + "\"]";
+            //XmlNode temp = Project.SelectSingleNode(xpath);
+            XmlNode temp = FindSubXmlElement2(rawProjectRoot, "PropertyGroup", "Condition", rCondition, "Label", "Configuration");
+            string ConfigurationType = GetSubNodeInnerText(temp, "ConfigurationType");
+            //string ConfigurationType = "StaticLibrary";//DynamicLibrary
             Add_Group_PlatConf(
                 delegate (string Plat, string Conf, string Condition)
                 {
                     XmlElement sub = Project_add_Node("PropertyGroup", "Condition", Condition);
                     sub.SetAttribute("Label", "Configuration");
-                    AddSubNodeWithInnerText(sub, "ConfigurationType", "DynamicLibrary");
-                    AddSubNodeWithInnerText(sub, "UseDebugLibraries", "true");
+                    AddSubNodeWithInnerText(sub, "ConfigurationType", ConfigurationType);
+                    AddSubNodeWithInnerText(sub, "UseDebugLibraries", Conf=="Debug"?"true":"false");
                     AddSubNodeWithInnerText(sub, "PlatformToolset", "Clang_3_8");
+                    AddSubNodeWithInnerText(sub, "AndroidAPILevel", AndroidAPILevel);
                 }
             );
+
+            //<ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+            temp = FindSubXmlElement2(rawProjectRoot, "ImportGroup", "Condition", rCondition, "Label", "PropertySheets");
+            if(temp!=null)
+            {
+                Add_Group_PlatConf(
+                    delegate (string Plat, string Conf, string Condition)
+                    {
+                        //clone 
+                        XmlElement clone = newDoc.ImportNode(temp, true) as XmlElement;
+                        clone.SetAttribute("Condition", Condition);
+                        newRoot.AppendChild(clone);
+                    }
+                );
+            }
+
 
             Project_add_Node("Import", "Project", "$(VCTargetsPath)\\Microsoft.Cpp.props");
             Project_add_Node("ImportGroup", "Label", "ExtensionSettings");
@@ -79,30 +109,39 @@ namespace Helper
             Project_add_Node("PropertyGroup", "Label", "UserMacros");
 
             ///////////////配置编译//////////
-            string rCondition = "'$(Configuration)|$(Platform)'=='Debug|Win32'";
-            XmlNode rrr = FindSubXmlElement(Project, "ItemDefinitionGroup", "Condition", rCondition);
+            //string rCondition = "'$(Configuration)|$(Platform)'=='Debug|Win32'";
+            XmlNode rrr = FindSubXmlElement(rawProjectRoot, "ItemDefinitionGroup", "Condition", rCondition);
             XmlNode rClCompile = FindSubXmlElement(rrr,"ClCompile","","");
 
             string AdditionalIncludeDirectories = GetSubNodeInnerText(rClCompile,"AdditionalIncludeDirectories");
             AdditionalIncludeDirectories.Replace("\\", "/");
             string PreprocessorDefinitions = GetSubNodeInnerText(rClCompile, "PreprocessorDefinitions");
-            PreprocessorDefinitions = PreprocessorDefinitions.Replace("_WIN32;", "_LINUX;");
-            PreprocessorDefinitions = PreprocessorDefinitions.Replace("_WINDOWS;", "ANDROID;");
+
+            PreprocessorDefinitions = PreprocessorDefinitions.Replace("_WIN32;", "");
+            PreprocessorDefinitions = PreprocessorDefinitions.Replace("_WINDOWS;", "");
             PreprocessorDefinitions = PreprocessorDefinitions.Replace("WIN32;", "");
+            PreprocessorDefinitions = PreprocessorDefinitions.Replace("D3D_DEBUG_INFO;", "");
+
+            PreprocessorDefinitions = pre_PreprocessorDefinitions + PreprocessorDefinitions;
 
             Add_Group_PlatConf(
                 delegate (string Plat, string Conf, string Condition)
                 {
                     XmlElement sub = Project_add_Node("ItemDefinitionGroup", "Condition", Condition);
-                    XmlElement ClCompile = xmlDoc.CreateElement("ClCompile");
+                    XmlElement ClCompile = newDoc.CreateElement("ClCompile");
                     sub.AppendChild(ClCompile);
-                    AddSubNodeWithInnerText(ClCompile, "PrecompiledHeader", "Use");
-                    AddSubNodeWithInnerText(ClCompile, "PrecompiledHeaderFile", "pch.h");
+                    AddSubNodeWithInnerText(ClCompile, "PrecompiledHeader", "NotUsing");//Use
+                    //AddSubNodeWithInnerText(ClCompile, "PrecompiledHeaderFile", "");//pch.h
                     AddSubNodeWithInnerText(ClCompile, "AdditionalIncludeDirectories", AdditionalIncludeDirectories);
-                    AddSubNodeWithInnerText(ClCompile, "PreprocessorDefinitions", "_LINUX;ANDROID;USE_GL");
-                    AddSubNodeWithInnerText(ClCompile, "AdditionalOptions", "-Wunused-private-field -std=gnu++11 -Wmultichar %(AdditionalOptions)");
+                    if(Conf == "Release")
+                        PreprocessorDefinitions = PreprocessorDefinitions.Replace("_DEBUG;", "");
+                    AddSubNodeWithInnerText(ClCompile, "PreprocessorDefinitions", PreprocessorDefinitions);
+                    AddSubNodeWithInnerText(ClCompile, "AdditionalOptions", AdditionalOptions);
                     AddSubNodeWithInnerText(ClCompile, "MultiProcessorCompilation", "true");
-                    XmlElement Link = xmlDoc.CreateElement("Link");
+                    AddSubNodeWithInnerText(ClCompile, "CppLanguageStandard", "c++11");
+                    AddSubNodeWithInnerText(ClCompile, "RuntimeTypeInfo", "true");
+
+                    XmlElement Link = newDoc.CreateElement("Link");
                     sub.AppendChild(Link);
                     AddSubNodeWithInnerText(Link, "LibraryDependencies", "m;z;%(LibraryDependencies)");
                 }
@@ -112,7 +151,7 @@ namespace Helper
             Project_add_Node("ImportGroup", "Label", "ExtensionTargets");
 
             //add所有的ItemGroup 
-            XmlNodeList subs = Project.ChildNodes;// ("ItemGroup");
+            XmlNodeList subs = rawProjectRoot.ChildNodes;// ("ItemGroup");
             for (int i = 0; i < subs.Count; ++i)
             {
                 XmlElement sub = subs[i] as XmlElement;
@@ -123,14 +162,20 @@ namespace Helper
                 if (kk != null)
                     continue;
 
-                //XmlNode clone = sub.CloneNode(true);
-                rootNode.AppendChild(xmlDoc.ImportNode(sub, true));
+                //删除xmlns:
+                //xmlns="http://schemas.microsoft.com/developer/msbuild/2003
+                XmlElement clone = newDoc.ImportNode(sub, true) as XmlElement;
+                clone.RemoveAllAttributes();
+                //clone.RemoveAttribute("xmlns", clone.NamespaceURI);
+                newRoot.AppendChild(clone);
             }
             Project_add_Node("ImportGroup", "Label", "ExtensionTargets");
         }
+
+        //special add group:
         public void Add_PropertyGroup_Globals(string Guid)
         {
-            XmlNode rrr = FindSubXmlElement(Project, "PropertyGroup", "Label", "Globals");
+            XmlNode rrr = FindSubXmlElement(rawProjectRoot, "PropertyGroup", "Label", "Globals");
             string ProjectGuid = GetSubNodeInnerText(rrr,"ProjectGuid");
             string RootNamespace = GetSubNodeInnerText(rrr,"RootNamespace");
 
@@ -157,24 +202,44 @@ namespace Helper
             return null;
         }
 
-        //查找子节点:
-        XmlNode FindSubXmlElement(XmlNode Project, string PropertyGroup, string key, string Label)
+        //查找子节点: 
+        static XmlNode FindSubXmlElement(XmlNode Project, string PropertyGroup, string key, string value)
         {
-            XmlNodeList subs = Project.ChildNodes;// ("/"+Project.Name+"/"+PropertyGroup);
-            for (int i = 0; i < subs.Count; ++i)
+            // ("/"+Project.Name+"/"+PropertyGroup);
+            foreach(XmlNode node in Project.ChildNodes)
             {
-                if (subs[i].Name == PropertyGroup)
+                if (node.Name == PropertyGroup)
                 {
-                    if (key == "")
-                        return subs[i];
-                    var kk = subs[i].Attributes[key];//"Label"
-                    if (kk != null && kk.Value == Label)
-                        return subs[i];
+                    bool r1 = CheckAttr(node, key, value);
+                    if (r1 )
+                        return node;
                 }
             }
             return null;
         }
-
+        //查找满足条件的
+        static XmlNode FindSubXmlElement2(XmlNode Project, string PropertyGroup, string key, string value, string key2, string value2)
+        {
+            foreach (XmlNode node in Project.ChildNodes)
+            {
+                if (node.Name == PropertyGroup)
+                {
+                    bool r1 = CheckAttr(node, key, value);
+                    bool r2 = CheckAttr(node, key2, value2);
+                    if (r1 && r2) return node;
+                }
+            }
+            return null;
+        }
+        static bool CheckAttr(XmlNode node, string key, string value)
+        {
+            if (String.IsNullOrEmpty(key))
+            {
+                return true;
+            }
+            var tt = node.Attributes[key];//"Label"
+            return (tt != null && tt.Value == value);
+        }
         //public void AddAttribute(XmlNode node ,string key ,string value)
         //{
         //    node.SetAttribute(key, value);
@@ -183,7 +248,7 @@ namespace Helper
         //增加属性节点: <Configuration>Debug</Configuration>
         public void AddSubNodeWithInnerText(XmlNode node, string key, string value)
         {
-            XmlNode att = xmlDoc.CreateElement(key);
+            XmlNode att = newDoc.CreateElement(key);
             att.InnerText = value;
             //xml节点附件属性
             node.AppendChild(att);
@@ -194,35 +259,33 @@ namespace Helper
             node.AppendChild(sub_node);
         }
 
-        public void Save(string fn)
-        {
-            xmlDoc.Save(fn);
-            Console.WriteLine("save:" + fn);
-        }
+
         public XmlElement Project_add_Node(string ele, string prop_key, string prop_value)
         {
-            XmlElement sub = xmlDoc.CreateElement("ItemGroup");
+            XmlElement sub = newDoc.CreateElement(ele);
             if (prop_key.Length > 0)
                 sub.SetAttribute(prop_key, prop_value);
-            rootNode.AppendChild(sub);
+            newRoot.AppendChild(sub);
             return sub;
         }
 
-
-        string[] _Confs = { "Debug", "Release" };
-        string[] _Plats = { "ARM", "ARM64", "x64", "x86" };
-
-
-
+        /*
+            <ProjectConfiguration Include="Debug|ARM">
+                  <Configuration>Debug</Configuration>
+                  <Platform>ARM</Platform>
+            </ProjectConfiguration> 
+         */
         XmlNode CreateProjectConfiguration(string Configuration, string Platform)
         {
-            XmlNode res = xmlDoc.CreateElement("ProjectConfiguration");
-            AddSubNodeWithInnerText(res, "Include", Configuration + "|" + Platform);
-            AddSubNodeWithInnerText(res, "Configuration", Configuration == "Debug" ? "true" : "false");
+            XmlElement res = newDoc.CreateElement("ProjectConfiguration");
+            res.SetAttribute("Include", Configuration + "|" + Platform);
+            AddSubNodeWithInnerText(res, "Configuration", Configuration);
             AddSubNodeWithInnerText(res, "Platform", Platform);
             return res;
         }
 
+        string[] _Confs = { "Debug" };//, "Release"
+        string[] _Plats = { "x86" };//"ARM", "ARM64", "x64", 
         void Add_Group_PlatConf(Action<string, string, string> action)
         {
             for (int i = 0; i < _Plats.Length; ++i)
@@ -234,5 +297,70 @@ namespace Helper
                 }
             }
         }
-    }
-}
+
+        /// <summary>
+        /// /////////////////////////////////////////////////////////////////////
+        /// </summary>
+        XmlDocument doc = new XmlDocument();
+        XmlNode rawProjectRoot = null;
+        public void CreateAndroid(string xmlFilePath)
+        {
+            if(String.IsNullOrEmpty(xmlFilePath))
+            {
+                Console.WriteLine("CreateAndroid: xmlFilePath = "+ xmlFilePath);
+                return;
+            }
+            doc.Load(xmlFilePath);
+            rawProjectRoot = doc.DocumentElement;
+
+            InitNew();
+
+            string newFileName = xmlFilePath.Replace(".vcxproj", proj_android);
+            Save(newFileName);
+        }
+        static string proj_android = "_a.vcxproj";
+        public void Save(string fn)
+        {
+            RegexOptions options = System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline;
+            //去掉注释 和命名空间
+            string newXml = Regex.Replace(newDoc.OuterXml, @"(xmlns:?[^=]*=[""][^""]*[""])", "", options);
+            //File.WriteAllText(fn, newXml); //fail: will eat all /r/n
+            ////newDoc.RemoveAll();
+            //<ProjectReference Include="..\plat\plat.vcxproj">
+            if(newXml.Contains("<ProjectReference Include=\""))
+            {
+                newXml = newXml.Replace(".vcxproj", proj_android); //Regex.Replace(newXml, "\<ProjectReference Include\=\"()", "", options);
+            }
+
+            newDoc.LoadXml(newXml);
+            newDoc.Save(fn);
+            Console.WriteLine("save:" + fn);
+        }
+
+        //fail:
+        //public static void Save2(string fn, XmlDocument obj)
+        //{
+        //    XmlSerializer serializer = new XmlSerializer(obj.GetType());
+
+        //    // 将对象序列化输出到文件
+        //    FileStream stream = new FileStream(fn, FileMode.Create);
+
+        //    XmlWriterSettings settings = new XmlWriterSettings();
+        //    settings.Indent = true;
+        //    settings.IndentChars = "    ";
+        //    settings.NewLineChars = "\r\n";
+        //    settings.Encoding = Encoding.UTF8;
+        //    //settings.OmitXmlDeclaration = true;  // 不生成声明头
+
+        //    using (XmlWriter xmlWriter = XmlWriter.Create(stream, settings))
+        //    {
+        //        // 强制指定命名空间，覆盖默认的命名空间
+        //        XmlSerializerNamespaces namespaces = new XmlSerializerNamespaces();
+        //        namespaces.Add(string.Empty, string.Empty);
+        //        serializer.Serialize(xmlWriter, obj, namespaces);
+        //        xmlWriter.Close();
+        //    };
+        //    stream.Close();
+        //}
+    }//end class 
+}//end NS
