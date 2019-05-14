@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2017
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityScripts", "UnityScripts.csproj", "{38386D73-00D8-915F-C44C-227848ED7645}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityScripts.Editor", "UnityScripts.Editor.csproj", "{8E5550A5-CAF9-A5D7-65D4-444EF6A12DBA}"
 EndProject
 Global
@@ -11,10 +9,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{38386D73-00D8-915F-C44C-227848ED7645}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38386D73-00D8-915F-C44C-227848ED7645}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38386D73-00D8-915F-C44C-227848ED7645}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38386D73-00D8-915F-C44C-227848ED7645}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8E5550A5-CAF9-A5D7-65D4-444EF6A12DBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8E5550A5-CAF9-A5D7-65D4-444EF6A12DBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E5550A5-CAF9-A5D7-65D4-444EF6A12DBA}.Release|Any CPU.ActiveCfg = Release|Any CPU

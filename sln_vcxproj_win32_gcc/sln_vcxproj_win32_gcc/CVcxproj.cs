@@ -19,7 +19,7 @@ namespace Helper
         //用户定义的配置项: -std=gnu++11
         public string AndroidAPILevel = "android-19";
         public string pre_PreprocessorDefinitions = "_LINUX;ANDROID;POSIX;GNUC;__ANDROID__;";
-        public string AdditionalOptions = " -Wmultichar -Wno-unused-private-field -Wno-unused-local-typedef -Wno-unused-variable %(AdditionalOptions)";
+        public string AdditionalOptions = "  -Wmultichar -Wno-unused-private-field -Wno-unused-local-typedef -Wno-unused-variable -Wno-invalid-source-encoding -Wno-overloaded-virtual -Wno-undefined-bool-conversion -Wno-writable-strings -Wno-reorder -Wno-tautological-compare -Wno-c++11-narrowing -Wno-unused-value %(AdditionalOptions)";
 
         //新建的Doc
         public XmlDocument newDoc = new XmlDocument();
@@ -80,12 +80,30 @@ namespace Helper
             temp = FindSubXmlElement2(rawProjectRoot, "ImportGroup", "Condition", rCondition, "Label", "PropertySheets");
             if(temp!=null)
             {
+                string _path = System.IO.Path.GetDirectoryName(m_xmlFilePath);
                 Add_Group_PlatConf(
                     delegate (string Plat, string Conf, string Condition)
                     {
                         //clone 
                         XmlElement clone = newDoc.ImportNode(temp, true) as XmlElement;
                         clone.SetAttribute("Condition", Condition);
+                        foreach (XmlNode node in clone.ChildNodes)
+                        {
+                            if (node.Name == "Import")
+                            {
+                                string vv = node.Attributes["Project"].Value;
+                                if(!vv.EndsWith(".user.props") && vv.EndsWith(".props"))
+                                {
+                                    string new_vv = vv.Replace(".props", "_a.props");
+                                    string oldName = _path +"\\" +vv;
+                                    if (File.Exists(oldName))
+                                    {
+                                        File.Copy(oldName, _path + "\\" + new_vv, true);
+                                        (node as XmlElement).SetAttribute("Project", new_vv);
+                                    }
+                                }
+                            }
+                        }
                         newRoot.AppendChild(clone);
                     }
                 );
@@ -114,7 +132,30 @@ namespace Helper
             XmlNode rClCompile = FindSubXmlElement(rrr,"ClCompile","","");
 
             string AdditionalIncludeDirectories = GetSubNodeInnerText(rClCompile,"AdditionalIncludeDirectories");
-            AdditionalIncludeDirectories.Replace("\\", "/");
+            string []sa = AdditionalIncludeDirectories.Split(new char[] { ';' });
+            if(sa!=null && sa.Length>0)
+            {
+                int changed = 0;
+                for(int i = 0;i < sa.Length;++i)
+                {
+                    //$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\include
+                    if (sa[i].Contains("\\Microsoft SDKs\\Windows\\"))
+                    {
+                        sa[i] = ".;";
+                        changed++;
+                    }
+                    else if (sa[i].EndsWith("\\win32"))
+                    {
+                        sa[i] = sa[i].Substring(0, sa[i].Length - 5) + "android";
+                        changed++;
+                    }                        
+                }
+                if(changed>0)
+                    AdditionalIncludeDirectories = string.Join(";", sa);
+
+            }
+
+            //AdditionalIncludeDirectories.Replace("\\", "/");
             string PreprocessorDefinitions = GetSubNodeInnerText(rClCompile, "PreprocessorDefinitions");
 
             PreprocessorDefinitions = PreprocessorDefinitions.Replace("_WIN32;", "");
@@ -138,12 +179,16 @@ namespace Helper
                     AddSubNodeWithInnerText(ClCompile, "PreprocessorDefinitions", PreprocessorDefinitions);
                     AddSubNodeWithInnerText(ClCompile, "AdditionalOptions", AdditionalOptions);
                     AddSubNodeWithInnerText(ClCompile, "MultiProcessorCompilation", "true");
-                    AddSubNodeWithInnerText(ClCompile, "CppLanguageStandard", "c++11");
+                    AddSubNodeWithInnerText(ClCompile, "CppLanguageStandard", "gnu++11");//c++11
                     AddSubNodeWithInnerText(ClCompile, "RuntimeTypeInfo", "true");
+                    AddSubNodeWithInnerText(ClCompile, "ExceptionHandling", "Enabled");
 
+                    //如果是bin?
                     XmlElement Link = newDoc.CreateElement("Link");
                     sub.AppendChild(Link);
                     AddSubNodeWithInnerText(Link, "LibraryDependencies", "m;z;%(LibraryDependencies)");
+                    AddSubNodeWithInnerText(Link, "IncrementalLink", "true");
+                    AddSubNodeWithInnerText(Link, "Relocation", "false");
                 }
             );
 
@@ -191,6 +236,9 @@ namespace Helper
 
         static string GetSubNodeInnerText(XmlNode rrr,string sub_name)
         {
+            if (rrr == null)
+                return "";
+
             XmlNodeList subs = rrr.ChildNodes;// ("/"+Project.Name+"/"+PropertyGroup);
             for (int i = 0; i < subs.Count; ++i)
             {
@@ -199,14 +247,17 @@ namespace Helper
                     return subs[i].InnerText;
                 }
             }
-            return null;
+            return ""; 
         }
 
         //查找子节点: 
-        static XmlNode FindSubXmlElement(XmlNode Project, string PropertyGroup, string key, string value)
+        static XmlNode FindSubXmlElement(XmlNode parentNode, string PropertyGroup, string key, string value)
         {
+            if (parentNode == null)
+                return null;
+
             // ("/"+Project.Name+"/"+PropertyGroup);
-            foreach(XmlNode node in Project.ChildNodes)
+            foreach(XmlNode node in parentNode.ChildNodes)
             {
                 if (node.Name == PropertyGroup)
                 {
@@ -303,9 +354,11 @@ namespace Helper
         /// </summary>
         XmlDocument doc = new XmlDocument();
         XmlNode rawProjectRoot = null;
+        string m_xmlFilePath = "";
         public void CreateAndroid(string xmlFilePath)
         {
-            if(String.IsNullOrEmpty(xmlFilePath))
+            m_xmlFilePath = xmlFilePath;
+            if (String.IsNullOrEmpty(xmlFilePath))
             {
                 Console.WriteLine("CreateAndroid: xmlFilePath = "+ xmlFilePath);
                 return;
@@ -317,6 +370,9 @@ namespace Helper
 
             string newFileName = xmlFilePath.Replace(".vcxproj", proj_android);
             Save(newFileName);
+
+
+            File.Copy(xmlFilePath + ".filters", newFileName + ".filters",true);
         }
         static string proj_android = "_a.vcxproj";
         public void Save(string fn)

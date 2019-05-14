@@ -1,8 +1,4 @@
 ﻿using Helper;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 
 namespace XmlExample
 {
@@ -15,6 +11,7 @@ namespace XmlExample
             {
                 CSln.Convert(args[0]);
             }
+            //G:\xProject_dp\dp\proj.win32\dp.sln
             //"G:/xProject_dp/dp/Classes/libGraphic/libGraphic_gl.vcxproj"
             else if (args[0].EndsWith(".vcxproj"))
             {

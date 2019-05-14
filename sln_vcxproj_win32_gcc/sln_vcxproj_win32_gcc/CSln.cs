@@ -32,8 +32,9 @@ namespace Helper
                 File.WriteAllLines(newsln, ss);
             }
         }
-
-        static string pattern = "Project\\(\"\\{([0-9a-zA-Z-]+)\\}\"\\) \\= \"([0-9a-zA-Z_-]+)\"\\, \"([0-9a-zA-Z-_\\\\\\.]+)\"\\, \"\\{([0-9a-zA-Z-]+)\\}\"";
+        static string project = "Project\\(\"\\{([0-9a-zA-Z\\-]+)\\}\"\\) \\= \"([0-9a-zA-Z_\\-\\.]+)\"\\, ";
+        static string vcxproj = "\"([0-9a-zA-Z\\-_\\\\.]+)\"\\, ";
+        static string pattern = project + vcxproj;//+ "\"\\{([0-9a-zA-Z-]+)\\}\"";
         static Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
 
         public static bool DoLine(string line)
